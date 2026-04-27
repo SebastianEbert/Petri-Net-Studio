@@ -6,7 +6,7 @@
     <title>Modern Petri Net Editor</title>
     <style>
         :root {
-            /* Light Theme Variables (Default) */
+            /* Light Theme Variables */
             --bg-color: #fafbfc;
             --dot-color: #cbd5e1;
             --panel-bg: rgba(255, 255, 255, 0.85);
@@ -25,13 +25,13 @@
             --bg-color: #0f172a;
             --dot-color: #334155;
             --panel-bg: rgba(30, 41, 59, 0.85);
-            --text-main: #ffffff; /* Brighter pure white for active text */
-            --text-muted: #cbd5e1; /* Brighter slate for inactive text */
+            --text-main: #ffffff; 
+            --text-muted: #cbd5e1; 
             --border-light: rgba(71, 85, 105, 0.8);
             --hover-bg: rgba(51, 65, 85, 0.8);
             --zoom-bg: #1e293b;
             --zoom-hover: #334155;
-            --primary: #00bfff; /* Bright neon blue for Layout and Model Name */
+            --primary: #00bfff; 
         }
 
         body { 
@@ -51,12 +51,10 @@
             transition: background 0.3s ease, border-color 0.3s ease;
         }
 
-        /* Floating Toolbars */
         #toolbar { bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 8px; }
         #file-menu { top: 20px; left: 20px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
         #layout-menu { top: 20px; right: 20px; display: flex; align-items: center; gap: 4px; padding: 8px; }
 
-        /* Dark Mode Toggle (Bottom Left) */
         #theme-toggle {
             bottom: 30px; left: 30px; width: 44px; height: 44px;
             display: flex; align-items: center; justify-content: center;
@@ -94,13 +92,26 @@
         #zoom-label:hover { color: var(--text-main); background: var(--zoom-hover); }
 
         .tool-btn {
-            background: transparent; border: none; padding: 10px 14px; border-radius: 10px;
+            background: transparent; border: none; padding: 8px 12px; border-radius: 10px;
             font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 8px; /* Added flexbox to align SVG and text */
         }
         
         .tool-btn:hover { color: var(--text-main); background: var(--hover-bg); }
         .tool-btn.active { background: var(--text-main); color: var(--bg-color); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); }
         .divider { width: 1px; height: 24px; background-color: var(--border-light); margin: 0 6px; }
+
+        /* SVG Styling to make them scale and color match the text */
+        .tool-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            flex-shrink: 0;
+        }
 
         #help-text {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.8); color: white; 
@@ -114,6 +125,13 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000;
         }
         #toast.show { opacity: 1; top: 60px; }
+
+        .inline-input {
+            position: absolute; background: var(--bg-color); border: 2px dashed var(--primary);
+            color: var(--text-main); font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 600;
+            outline: none; padding: 2px 6px; border-radius: 6px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .inline-input.timing { font-family: monospace; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -127,31 +145,83 @@
 
         <nav id="file-menu" class="glass-panel">
             <span id="model-name-display" title="Click to rename model">Untitled_Net</span>
-            <button class="tool-btn" id="btn-open">📂 Open</button>
-            <button class="tool-btn" id="btn-save">💾 Save</button>
+            <button class="tool-btn" id="btn-open">
+                <svg viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"></path></svg>
+                Open
+            </button>
+            <button class="tool-btn" id="btn-save">
+                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Save
+            </button>
         </nav>
 
         <nav id="layout-menu" class="glass-panel">
-            <button class="tool-btn" id="btn-autolayout" style="color: var(--primary);">✨ Auto Layout</button>
+            <button class="tool-btn" id="btn-autolayout" style="color: var(--primary);">
+                <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                Auto Layout
+            </button>
         </nav>
 
         <button id="theme-toggle" class="glass-panel" title="Toggle Dark Mode">🌙</button>
 
         <nav id="toolbar" class="glass-panel">
-            <button class="tool-btn active" data-tool="Select">Cursor</button>
+            <button class="tool-btn active" data-tool="Select">
+                <svg viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path><path d="M13 13l6 6"></path></svg>
+                Select
+            </button>
             <div class="divider"></div>
-            <button class="tool-btn" data-tool="Place">Place</button>
-            <button class="tool-btn" data-tool="Transition">Transition</button>
-            <button class="tool-btn" data-tool="Ref Place">Ref Place</button>
-            <button class="tool-btn" data-tool="Ref Transition">Ref Transition</button>
-            <button class="tool-btn" data-tool="Page">Page</button>
+            
+            <button class="tool-btn" data-tool="Place">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle></svg>
+                Place
+            </button>
+            <button class="tool-btn" data-tool="Transition">
+                <svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="2"></rect></svg>
+                Discrete Tx
+            </button>
+            <button class="tool-btn" data-tool="Timed Trans">
+                <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><circle cx="12" cy="12" r="4"></circle><polyline points="12 10 12 12 14 12"></polyline></svg>
+                Timed Tx
+            </button>
+            
+            <button class="tool-btn" data-tool="Ref Place">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"></circle></svg>
+                Ref Place
+            </button>
+            <button class="tool-btn" data-tool="Ref Transition">
+                <svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="2" stroke-dasharray="3 3"></rect></svg>
+                Ref Tx
+            </button>
+            <button class="tool-btn" data-tool="Page">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                Page
+            </button>
+            
             <div class="divider"></div>
-            <button class="tool-btn" data-tool="Arc">Arc</button>
-            <button class="tool-btn" data-tool="Inhibitor">Inhibitor</button>
-            <button class="tool-btn" data-tool="Token">Token</button>
+            
+            <button class="tool-btn" data-tool="Arc">
+                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                Arc
+            </button>
+            <button class="tool-btn" data-tool="Inhibitor">
+                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="15" y2="12"></line><circle cx="17" cy="12" r="2"></circle></svg>
+                Inhibitor
+            </button>
+            <button class="tool-btn" data-tool="Token">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"></circle></svg>
+                Token
+            </button>
+            
             <div class="divider"></div>
-            <button class="tool-btn" data-tool="Delete" style="color: #ef4444;">Eraser</button>
-            <button class="tool-btn" data-tool="Clear" style="color: #ef4444;">Clear</button>
+            
+            <button class="tool-btn" data-tool="Delete" style="color: var(--danger);">
+                <svg viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Delete
+            </button>
+            <button class="tool-btn" data-tool="Clear" style="color: var(--danger);">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                Clear
+            </button>
         </nav>
 
         <div id="zoom-controls">
@@ -196,14 +266,14 @@
                 line: isDark ? '#94a3b8' : '#334155',
                 refLine: isDark ? '#64748b' : '#94a3b8',
                 nodeBg: isDark ? '#1e293b' : '#ffffff',
-                nodeBorder: isDark ? '#00ff41' : '#1e293b', // Matrix Green
+                nodeBorder: isDark ? '#00ff41' : '#1e293b', 
                 textMain: isDark ? '#ffffff' : '#0f172a',
                 textMuted: isDark ? '#cbd5e1' : '#475569',
                 pageGrad1: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                 pageGrad2: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(248, 250, 252, 0.95)',
                 pageTitleBg: isDark ? 'rgba(51, 65, 85, 0.7)' : 'rgba(241, 245, 249, 0.7)',
-                pageBorder: isDark ? '#00ff41' : 'rgba(226, 232, 240, 0.8)', // Matrix Green
-                selected: isDark ? '#00bfff' : '#4f46e5', // Bright Blue Selection
+                pageBorder: isDark ? '#00ff41' : 'rgba(226, 232, 240, 0.8)',
+                selected: isDark ? '#00bfff' : '#4f46e5', 
                 target: '#10b981'
             };
         }
@@ -243,14 +313,20 @@
             zoomLabel.innerText = Math.round(scale * 100) + '%'; redraw();
         }
 
+        function clearActiveInput() {
+            const activeInput = document.getElementById('inline-editor');
+            if (activeInput) activeInput.blur(); // Blur forces save and close
+        }
+
         canvas.addEventListener('wheel', (e) => {
-            e.preventDefault(); const { screenX, screenY } = getMousePos(e);
+            e.preventDefault(); clearActiveInput();
+            const { screenX, screenY } = getMousePos(e);
             setZoom(scale * (e.deltaY > 0 ? 0.9 : 1.1), screenX, screenY);
         }, { passive: false });
 
-        document.getElementById('zoom-in').addEventListener('click', () => setZoom(scale * 1.2));
-        document.getElementById('zoom-out').addEventListener('click', () => setZoom(scale * 0.8));
-        document.getElementById('zoom-label').addEventListener('click', () => { scale = 1; offsetX = 0; offsetY = 0; setZoom(1); });
+        document.getElementById('zoom-in').addEventListener('click', () => { clearActiveInput(); setZoom(scale * 1.2); });
+        document.getElementById('zoom-out').addEventListener('click', () => { clearActiveInput(); setZoom(scale * 0.8); });
+        document.getElementById('zoom-label').addEventListener('click', () => { clearActiveInput(); scale = 1; offsetX = 0; offsetY = 0; setZoom(1); });
 
         // --- Recursive Auto Layout ---
         function runAutoLayout(parentId = null, startX = 100, startY = 100) {
@@ -305,6 +381,14 @@
                 } else if (el.type === 'Transition') {
                     const tag = el.isRef ? `referenceTransition` : `transition`;
                     out += `      <${tag} id="${el.id}"${el.isRef ? ` ref="${el.targetId || ''}"` : ''}>\n`;
+                    if (!el.isRef) {
+                        out += `        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">\n`;
+                        if (el.subType === 'timed') {
+                            out += `          <type>timeTransitionType</type>\n`;
+                            out += `          <time start="${el.timeStart}" end="${el.timeEnd}"/>\n`;
+                        } else { out += `          <type>discreteTransitionType</type>\n`; }
+                        out += `        </toolspecific>\n`;
+                    }
                     out += `        <name><text>${el.name}</text></name>\n`;
                     out += `        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n      </${tag}>\n`;
                 }
@@ -361,17 +445,30 @@
                         if (['place', 'transition', 'page', 'referenceplace', 'referencetransition'].includes(tag)) {
                             let name = id, nameNode = getChildTag(child, 'name');
                             if (nameNode) { let textNode = getChildTag(nameNode, 'text'); if (textNode) name = textNode.textContent; }
+                            
                             let x = 100, y = 100, w = 240, h = 180, graphicsNode = getChildTag(child, 'graphics');
                             if (graphicsNode) {
                                 let posNode = getChildTag(graphicsNode, 'position'); if (posNode) { x = parseFloat(posNode.getAttribute('x')); y = parseFloat(posNode.getAttribute('y')); }
                                 let dimNode = getChildTag(graphicsNode, 'dimension'); if (dimNode) { w = parseFloat(dimNode.getAttribute('x')); h = parseFloat(dimNode.getAttribute('y')); }
                             }
+                            
                             if (tag === 'page') { elements[id] = { id, name, type: 'Page', x, y, w, h, isRef: false, parentId, tokens: 0 }; parseXMLNode(child, id); 
                             } else if (tag === 'place') {
                                 let tokens = 0, markNode = getChildTag(child, 'initialMarking');
                                 if (markNode) { let textNode = getChildTag(markNode, 'text'); if (textNode) tokens = parseInt(textNode.textContent) || 0; }
                                 elements[id] = { id, name, type: 'Place', x, y, isRef: false, parentId, tokens };
-                            } else if (tag === 'transition') { elements[id] = { id, name, type: 'Transition', x, y, isRef: false, parentId, tokens: 0 };
+                            } else if (tag === 'transition') { 
+                                let subType = 'discrete', tStart = 0, tEnd = 0;
+                                let tsNode = getChildTag(child, 'toolspecific');
+                                if (tsNode) {
+                                    let typeNode = getChildTag(tsNode, 'type');
+                                    if (typeNode && typeNode.textContent.trim() === 'timeTransitionType') {
+                                        subType = 'timed';
+                                        let timeNode = getChildTag(tsNode, 'time');
+                                        if (timeNode) { tStart = parseInt(timeNode.getAttribute('start')) || 0; tEnd = parseInt(timeNode.getAttribute('end')) || 0; }
+                                    }
+                                }
+                                elements[id] = { id, name, type: 'Transition', subType, timeStart: tStart, timeEnd: tEnd, x, y, isRef: false, parentId, tokens: 0 };
                             } else if (tag === 'referenceplace') { elements[id] = { id, name, type: 'Place', x, y, isRef: true, parentId, targetId: child.getAttribute('ref'), tokens: 0 };
                             } else if (tag === 'referencetransition') { elements[id] = { id, name, type: 'Transition', x, y, isRef: true, parentId, targetId: child.getAttribute('ref'), tokens: 0 }; }
                         } else if (tag === 'arc') {
@@ -395,12 +492,12 @@
             }; reader.readAsText(file);
         }
 
-        // --- Event Listeners ---
         document.getElementById('btn-save').addEventListener('click', handleSave);
         document.getElementById('btn-open').addEventListener('click', handleOpen);
         document.getElementById('file-input').addEventListener('change', (e) => { if (e.target.files.length > 0) { fileHandle = null; importPNML(e.target.files[0]); e.target.value = ''; } });
 
         window.addEventListener('keydown', function(e) {
+            if (document.getElementById('inline-editor')) return;
             if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.code === 'KeyS')) {
                 e.preventDefault(); e.stopPropagation(); handleSave(); return false;
             }
@@ -421,7 +518,12 @@
 
         document.querySelectorAll('#toolbar .tool-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const tool = e.target.getAttribute('data-tool');
+                let currentBtn = e.target;
+                // If they clicked the SVG inside the button, grab the parent button
+                if (!currentBtn.hasAttribute('data-tool')) currentBtn = currentBtn.closest('.tool-btn');
+                if (!currentBtn) return;
+                
+                const tool = currentBtn.getAttribute('data-tool');
                 if (tool === 'Clear') { elements = {}; arcs = []; counter = 1; selectedElement = null; linkingReference = null; scale = 1; offsetX = 0; offsetY = 0; fileHandle = null; updateModelName("Untitled_Net"); setZoom(1); setTool('Select'); markDirty(); return; }
                 setTool(tool);
             });
@@ -443,9 +545,25 @@
         }
 
         function getDepth(el) { let d = 0; let c = el; while (c.parentId && elements[c.parentId]) { d++; c = elements[c.parentId]; } return d; }
+        
         function getNodeAt(wx, wy) {
             for (let id in elements) { const n = elements[id]; if (n.type !== 'Page' && Math.abs(n.x - wx) < 22 && Math.abs(n.y - wy) < 22) return n; }
             return getDeepestPageAt(wx, wy);
+        }
+
+        function getEditableTarget(wx, wy) {
+            const sortedIds = Object.keys(elements).sort((a, b) => getDepth(elements[b]) - getDepth(elements[a]));
+            for (let id of sortedIds) {
+                const n = elements[id];
+                if (n.type !== 'Page') {
+                    if (Math.abs(n.x - wx) < 22 && Math.abs(n.y - wy) < 22) return { node: n, type: 'name' };
+                    if (Math.abs(n.x - wx) < 50 && wy >= n.y - 40 && wy <= n.y - 10) return { node: n, type: 'name' };
+                    if (n.subType === 'timed' && Math.abs(n.x - wx) < 50 && wy >= n.y + 20 && wy <= n.y + 45) return { node: n, type: 'timing' };
+                } else {
+                    if (wx >= n.x && wx <= n.x + n.w && wy >= n.y && wy <= n.y + 36) return { node: n, type: 'name' };
+                }
+            }
+            return null;
         }
 
         function getCenter(node) { return node.type === 'Page' ? { x: node.x + node.w/2, y: node.y + node.h/2 } : { x: node.x, y: node.y }; }
@@ -465,12 +583,73 @@
 
         canvas.addEventListener('dblclick', (e) => {
             if (linkingReference || currentTool === 'Delete') return; 
-            const { worldX, worldY } = getMousePos(e); const node = getNodeAt(worldX, worldY);
-            if (node) { const newName = prompt("Rename element:", node.name); if (newName !== null && newName.trim() !== "") { node.name = newName.trim(); markDirty(); redraw(); } }
+            const { screenX, screenY, worldX, worldY } = getMousePos(e); 
+            const target = getEditableTarget(worldX, worldY);
+            
+            if (target) { 
+                clearActiveInput();
+                const { node, type: editType } = target;
+
+                let targetWorldY = node.y - 26; 
+                let textAlign = 'center';
+                let inputScreenX = offsetX + node.x * scale;
+
+                if (node.type === 'Page') {
+                    targetWorldY = node.y + 18;
+                    inputScreenX = offsetX + (node.x + 16) * scale;
+                    textAlign = 'left';
+                } else if (editType === 'timing') {
+                    targetWorldY = node.y + 24;
+                }
+
+                const input = document.createElement('input');
+                input.id = 'inline-editor';
+                input.className = editType === 'timing' ? 'inline-input timing' : 'inline-input';
+                input.type = 'text';
+                
+                const inputScreenY = offsetY + targetWorldY * scale;
+                
+                input.style.left = `${inputScreenX}px`;
+                input.style.top = `${inputScreenY}px`;
+                input.style.textAlign = textAlign;
+                input.style.transform = node.type === 'Page' ? 'translate(0, -50%)' : 'translate(-50%, -50%)';
+                input.style.fontSize = `${(editType === 'timing' ? 14 : 12) * scale}px`;
+                input.style.width = `${Math.max(60, node.name.length * 8) * scale}px`;
+
+                input.value = editType === 'timing' ? `${node.timeStart}, ${node.timeEnd}` : node.name;
+
+                document.getElementById('canvas-container').appendChild(input);
+                input.focus();
+                input.select();
+
+                function saveAndClose() {
+                    if (!document.getElementById('inline-editor')) return;
+                    const val = input.value.trim();
+                    if (val !== "") {
+                        if (editType === 'timing') {
+                            const parts = val.split(',').map(s => parseInt(s.trim()));
+                            node.timeStart = isNaN(parts[0]) ? 0 : parts[0];
+                            node.timeEnd = isNaN(parts[1]) ? node.timeStart : parts[1];
+                        } else {
+                            node.name = val;
+                        }
+                        markDirty(); redraw();
+                    }
+                    input.remove();
+                }
+
+                input.addEventListener('blur', saveAndClose);
+                input.addEventListener('keydown', (ev) => {
+                    if (ev.key === 'Enter') saveAndClose();
+                    else if (ev.key === 'Escape') input.remove();
+                });
+            }
         });
 
         canvas.addEventListener('mousedown', (e) => {
+            clearActiveInput();
             const { screenX, screenY, worldX, worldY } = getMousePos(e);
+            
             if (e.button === 1) { isPanning = true; panStartX = screenX - offsetX; panStartY = screenY - offsetY; canvas.style.cursor = 'grabbing'; return; }
 
             if (linkingReference) {
@@ -491,12 +670,27 @@
                 }
                 selectedElement = node; draggingElement = node; dragOffsetX = worldX - node.x; dragOffsetY = worldY - node.y; redraw();
             } 
-            else if (['Place', 'Ref Place', 'Transition', 'Ref Transition', 'Page'].includes(currentTool)) {
-                const isRef = currentTool.startsWith('Ref'), type = currentTool.replace('Ref ', '');
+            else if (['Place', 'Ref Place', 'Transition', 'Timed Trans', 'Ref Transition', 'Page'].includes(currentTool)) {
+                const isRef = currentTool.startsWith('Ref');
+                let baseType = currentTool, subType = 'discrete';
+                
+                if (currentTool === 'Transition') { baseType = 'Transition'; }
+                else if (currentTool === 'Timed Trans') { baseType = 'Transition'; subType = 'timed'; }
+                else if (currentTool === 'Ref Transition') { baseType = 'Transition'; }
+                else if (currentTool === 'Ref Place') { baseType = 'Place'; }
+
                 const parent = getDeepestPageAt(worldX, worldY);
-                const id = (isRef ? 'R' : '') + type[0] + counter++;
-                elements[id] = { id, name: id, type, x: worldX, y: worldY, isRef, tokens: 0, parentId: parent ? parent.id : null, targetId: null, w: type === 'Page' ? 240 : null, h: type === 'Page' ? 180 : null };
-                markDirty(); if (isRef) linkingReference = elements[id]; else setTool('Select'); redraw();
+                const id = (isRef ? 'R' : '') + baseType[0] + counter++;
+                elements[id] = { 
+                    id, name: id, type: baseType, subType, x: worldX, y: worldY, isRef, tokens: 0, 
+                    parentId: parent ? parent.id : null, targetId: null, 
+                    w: baseType === 'Page' ? 240 : null, h: baseType === 'Page' ? 180 : null,
+                    timeStart: subType === 'timed' ? 1 : 0, timeEnd: subType === 'timed' ? 1 : 0
+                };
+                
+                markDirty(); 
+                if (isRef) linkingReference = elements[id]; else setTool('Select'); 
+                redraw();
             }
             else if (currentTool === 'Token') { const n = getNodeAt(worldX, worldY); if (n && n.type === 'Place') { n.tokens++; markDirty(); setTool('Select'); } }
             else if (currentTool === 'Arc' || currentTool === 'Inhibitor') {
@@ -505,21 +699,16 @@
                     if (!selectedForArc) {
                         selectedForArc = n;
                     } else if (selectedForArc.id !== n.id) {
-                        // Enforce Bipartite Graph rules
                         if ((selectedForArc.type === 'Place' && n.type === 'Place') || 
                             (selectedForArc.type === 'Transition' && n.type === 'Transition')) {
                             showToast(`Invalid: Cannot connect ${selectedForArc.type} to ${n.type}!`, true);
-                            selectedForArc = null;
-                            setTool('Select');
+                            selectedForArc = null; setTool('Select');
                         } else {
                             arcs.push({ src: selectedForArc.id, dst: n.id, type: currentTool === 'Inhibitor' ? 'inhibitor' : 'normal' }); 
-                            markDirty(); 
-                            setTool('Select');
+                            markDirty(); setTool('Select');
                         }
                     }
-                } else {
-                    selectedForArc = null;
-                }
+                } else { selectedForArc = null; }
                 redraw(); 
             }
         });
@@ -581,8 +770,28 @@
                     ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, Math.PI*2); ctx.fill(); ctx.stroke();
                     if (n.tokens === 1) { ctx.beginPath(); ctx.arc(n.x, n.y, 6, 0, Math.PI*2); ctx.fillStyle = cols.textMain; ctx.fill(); }
                     else if (n.tokens > 1) { ctx.fillStyle = cols.textMain; ctx.font = '800 16px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n.tokens, n.x, n.y); }
-                } else if (n.type === 'Transition') { ctx.beginPath(); ctx.roundRect(n.x - 15, n.y - 20, 30, 40, 4); ctx.fill(); ctx.stroke(); }
-                ctx.restore(); ctx.fillStyle = isSel ? cols.selected : cols.textMuted; ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(n.name, n.x, n.y + 26);
+                } else if (n.type === 'Transition') { 
+                    ctx.beginPath(); ctx.roundRect(n.x - 15, n.y - 20, 30, 40, 4); ctx.fill(); ctx.stroke(); 
+                    
+                    if (n.subType === 'timed') {
+                        ctx.beginPath(); ctx.arc(n.x, n.y, 6, 0, Math.PI * 2);
+                        ctx.strokeStyle = isSel ? cols.selected : cols.nodeBorder; ctx.lineWidth = 1; ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.x, n.y - 3);
+                        ctx.moveTo(n.x, n.y); ctx.lineTo(n.x + 2, n.y + 2); ctx.stroke();
+                    }
+                }
+                ctx.restore(); 
+                
+                // Name rendered ABOVE
+                ctx.fillStyle = isSel ? cols.selected : cols.textMuted; 
+                ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; 
+                ctx.fillText(n.name, n.x, n.y - 26);
+
+                // Timing rendered BELOW
+                if (n.subType === 'timed') {
+                    ctx.font = '600 14px monospace'; ctx.textBaseline = 'top';
+                    ctx.fillText(`[${n.timeStart}, ${n.timeEnd}]`, n.x, n.y + 24);
+                }
             }
             ctx.restore();
         }
