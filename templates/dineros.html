@@ -6,6 +6,7 @@
     <title>DiNeROS Editor</title>
     <style>
         :root {
+            /* Light Theme Variables */
             --bg-color: #fafbfc;
             --dot-color: #cbd5e1;
             --panel-bg: rgba(255, 255, 255, 0.85);
@@ -141,7 +142,6 @@
                 <div class="divider"></div>
                 <button class="tool-btn" data-tool="TopicPage"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg> Topic</button>
                 <button class="tool-btn" data-tool="ServicePage"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Service</button>
-                <button class="tool-btn" data-tool="Port"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-dasharray="2 2"></circle><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line></svg> Port</button>
             </nav>
         </div>
 
@@ -177,9 +177,9 @@
             const isDark = document.body.classList.contains('dark-mode');
             return {
                 grid: isDark ? '#334155' : '#cbd5e1', line: isDark ? '#94a3b8' : '#334155',
-                nodeBg: isDark ? '#1e293b' : '#ffffff', nodeBorder: isDark ? '#00ff41' : '#1e293b', 
-                textMain: isDark ? '#ffffff' : '#0f172a', textMuted: isDark ? '#cbd5e1' : '#475569',
-                selected: isDark ? '#00bfff' : '#4f46e5', target: '#10b981',
+                refLine: isDark ? '#64748b' : '#94a3b8', nodeBg: isDark ? '#1e293b' : '#ffffff', 
+                nodeBorder: isDark ? '#00ff41' : '#1e293b', textMain: isDark ? '#ffffff' : '#0f172a', 
+                textMuted: isDark ? '#cbd5e1' : '#475569', selected: isDark ? '#00bfff' : '#4f46e5', target: '#10b981',
                 pageGrad1: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                 pageGrad2: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(248, 250, 252, 0.95)',
                 pageTitleBg: isDark ? 'rgba(51, 65, 85, 0.7)' : 'rgba(241, 245, 249, 0.7)',
@@ -191,6 +191,7 @@
                     Sub: { bg: isDark ? 'rgba(12, 74, 110, 0.6)' : '#e0f2fe', border: '#0ea5e9' },
                     Server: { bg: isDark ? 'rgba(20, 83, 45, 0.6)' : '#dcfce7', border: '#22c55e' },
                     Service: { bg: isDark ? 'rgba(20, 83, 45, 0.4)' : '#dcfce7', border: '#22c55e' },
+                    Channel: { bg: isDark ? 'rgba(20, 83, 45, 0.8)' : '#bbf7d0', border: '#16a34a' },
                     Topic: { bg: isDark ? 'rgba(30, 58, 138, 0.8)' : '#bae6fd', border: '#0284c7' }
                 }
             };
@@ -299,9 +300,11 @@
                     if (elements[cid].parentId === id) deleteElementTree(cid);
                 }
             }
+            // Sever References safely
             for (let rid in elements) {
                 if (elements[rid].isRef && elements[rid].targetId === id) {
                     elements[rid].isRef = false; elements[rid].targetId = null;
+                    if (elements[rid].type === 'Port') delete elements[rid]; // Clean dead ports
                 }
             }
             arcs = arcs.filter(a => a.src !== id && a.dst !== id);
@@ -342,19 +345,13 @@
                 const isRef = currentTool.startsWith('Ref');
                 const baseType = currentTool.includes('Trans') ? 'Transition' : 'Place';
                 const parent = getDeepestPageAt(worldX, worldY);
-                const id = (isRef ? 'R' : '') + (isTimed ? 'T' : baseType[0]) + counter++;
                 
-                elements[id] = { id, name: id, type: baseType, subType: isTimed ? 'timed' : 'discrete', x: worldX, y: worldY, isRef, tokens: 0, timeStart: isTimed?1:0, timeEnd: isTimed?1:0, parentId: parent ? parent.id : null };
-                markDirty(); setTool('Select');
-            }
-            else if (currentTool === 'Port') {
-                const parent = getDeepestPageAt(worldX, worldY);
-                if (!parent || !['Topic', 'Service'].includes(parent.subType)) {
-                    showToast(`Ports must be placed inside a Topic or Service!`, true);
-                    setTool('Select'); return;
+                if (parent && ['Topic', 'Service', 'Channel'].includes(parent.subType)) {
+                    showToast(`Cannot place nodes directly inside a Channel!`, true); setTool('Select'); return;
                 }
-                const id = 'P' + counter++;
-                elements[id] = { id, name: 'port', type: 'Port', subType: 'port', x: worldX, y: worldY, parentId: parent.id };
+
+                const id = (isRef ? 'R' : '') + (isTimed ? 'T' : baseType[0]) + counter++;
+                elements[id] = { id, name: id, type: baseType, subType: isTimed ? 'timed' : 'discrete', x: worldX, y: worldY, isRef, tokens: 0, timeStart: isTimed?1:0, timeEnd: isTimed?1:0, parentId: parent ? parent.id : null };
                 markDirty(); setTool('Select');
             }
             else if (currentTool.endsWith('Page') || currentTool === 'Page') {
@@ -362,23 +359,17 @@
                 const subType = typeMap[currentTool];
                 const parent = getDeepestPageAt(worldX, worldY);
 
-                if (subType === 'CBGroup') {
-                    if (!parent || !hasAncestor(parent.id, 'Node')) { showToast(`CB Group must be inside a Node!`, true); setTool('Select'); return; }
-                }
-                if (['Timer', 'Sub', 'Server'].includes(subType)) {
-                    if (!parent || !hasAncestor(parent.id, 'CBGroup')) { showToast(`${subType} must be inside a CB Group!`, true); setTool('Select'); return; }
-                }
+                if (parent && ['Topic', 'Service', 'Channel'].includes(parent.subType)) { showToast(`Cannot place Pages inside a Channel!`, true); setTool('Select'); return; }
+                if (subType === 'CBGroup' && (!parent || !hasAncestor(parent.id, 'Node'))) { showToast(`CB Group must be inside a Node!`, true); setTool('Select'); return; }
+                if (['Timer', 'Sub', 'Server'].includes(subType) && (!parent || !hasAncestor(parent.id, 'CBGroup'))) { showToast(`${subType} must be inside a CB Group!`, true); setTool('Select'); return; }
 
                 const id = subType + counter++;
                 
                 let nx = worldX, ny = worldY, nw = 300, nh = 200;
                 if (parent) {
-                    nw = Math.min(nw, parent.w - 20);
-                    nh = Math.min(nh, parent.h - 50);
-                    nx = Math.min(nx, parent.x + parent.w - nw - 10);
-                    ny = Math.min(ny, parent.y + parent.h - nh - 10);
-                    nx = Math.max(nx, parent.x + 10);
-                    ny = Math.max(ny, parent.y + 40);
+                    nw = Math.min(nw, parent.w - 20); nh = Math.min(nh, parent.h - 50);
+                    nx = Math.max(parent.x + 10, Math.min(nx, parent.x + parent.w - nw - 10));
+                    ny = Math.max(parent.y + 40, Math.min(ny, parent.y + parent.h - nh - 10));
                 }
 
                 elements[id] = { 
@@ -388,6 +379,15 @@
                           subType === 'Timer' ? { t: 5, prio: 1 } : 
                           ['Sub', 'Server'].includes(subType) ? { prio: 2 } : null
                 };
+
+                // Auto-generate Server-side ports when creating a Service
+                if (subType === 'Service') {
+                    const reqP = 'P' + counter++;
+                    elements[reqP] = { id: reqP, name: 'request', type: 'Port', subType: 'server_req', x: nx + nw - 20, y: ny + 40, parentId: id };
+                    const resP = 'P' + counter++;
+                    elements[resP] = { id: resP, name: 'response', type: 'Port', subType: 'server_res', x: nx + nw - 20, y: ny + nh - 40, parentId: id };
+                }
+
                 markDirty(); setTool('Select');
             }
             else if (currentTool === 'Arc' || currentTool === 'Inhibitor') {
@@ -398,50 +398,65 @@
                     } else if (selectedForArc.id !== n.id) {
                         
                         let src = selectedForArc, dst = n;
-                        
-                        // Strict validation for places connecting to channels
-                        let placeConnectingToPort = false;
                         let validConnection = true;
 
-                        if (src.type === 'Place' && dst.type === 'Page' && ['Topic', 'Service'].includes(dst.subType)) {
-                            if (!src.parentId) { showToast("Place must be inside a page to connect to a channel!", true); validConnection = false; }
-                            else {
-                                let portId = 'P' + counter++;
-                                let a = Math.atan2(getCenter(src).y - getCenter(dst).y, getCenter(src).x - getCenter(dst).x);
-                                let portEdge = getPerimeterPoint(dst, getCenter(src).x, getCenter(src).y);
-                                elements[portId] = { id: portId, name: 'publisher', type: 'Port', subType: 'port', x: portEdge.x - 24*Math.cos(a), y: portEdge.y - 24*Math.sin(a), parentId: dst.id, isRef: true, targetId: src.id };
-                                validConnection = false; // Successfully created reference implicitly, no arc needed
-                            }
+                        // Constraint: Root Places cannot connect to channels
+                        if (src.type === 'Place' && !src.parentId && ['Topic', 'Service', 'Port'].includes(dst.subType || dst.type)) {
+                            showToast("Root places cannot connect to channels! Place them inside a Node.", true); validConnection = false;
                         }
-                        else if (src.type === 'Page' && ['Topic', 'Service'].includes(src.subType) && dst.type === 'Place') {
-                            if (!dst.parentId) { showToast("Place must be inside a page to connect to a channel!", true); validConnection = false; }
-                            else {
-                                let portId = 'P' + counter++;
-                                let a = Math.atan2(getCenter(dst).y - getCenter(src).y, getCenter(dst).x - getCenter(src).x);
-                                let portEdge = getPerimeterPoint(src, getCenter(dst).x, getCenter(dst).y);
-                                elements[portId] = { id: portId, name: 'subscriber', type: 'Port', subType: 'port', x: portEdge.x - 24*Math.cos(a), y: portEdge.y - 24*Math.sin(a), parentId: src.id, isRef: true, targetId: dst.id };
+                        if (dst.type === 'Place' && !dst.parentId && ['Topic', 'Service', 'Port'].includes(src.subType || src.type)) {
+                            showToast("Root places cannot connect to channels! Place them inside a Node.", true); validConnection = false;
+                        }
+
+                        if (validConnection) {
+                            // Smart Auto-Routing Logic
+                            if (src.type === 'Place' && dst.type === 'Page' && dst.subType === 'Topic') {
+                                let pCount = Object.values(elements).filter(e => e.parentId === dst.id).length;
+                                let pId = 'P' + counter++;
+                                elements[pId] = { id: pId, name: 'publisher', type: 'Port', x: dst.x + 20, y: dst.y + 40 + pCount*30, parentId: dst.id, isRef: true, targetId: src.id };
+                                validConnection = false; 
+                            }
+                            else if (src.type === 'Page' && src.subType === 'Topic' && dst.type === 'Place') {
+                                let pCount = Object.values(elements).filter(e => e.parentId === src.id).length;
+                                let pId = 'P' + counter++;
+                                elements[pId] = { id: pId, name: 'subscriber', type: 'Port', x: src.x + src.w - 20, y: src.y + 40 + pCount*30, parentId: src.id, isRef: true, targetId: dst.id };
                                 validConnection = false;
                             }
-                        }
-                        else if (src.type === 'Place' && dst.type === 'Port') {
-                            if (!src.parentId) { showToast("Place must be inside a page to connect!", true); validConnection = false; }
-                            else { dst.isRef = true; dst.targetId = src.id; dst.name = 'publisher'; validConnection = false; }
-                        }
-                        else if (src.type === 'Port' && dst.type === 'Place') {
-                            if (!dst.parentId) { showToast("Place must be inside a page to connect!", true); validConnection = false; }
-                            else { src.isRef = true; src.targetId = dst.id; src.name = 'subscriber'; validConnection = false; }
-                        }
-                        
-                        // Strict Place-Place & Tx-Tx rules
-                        if (validConnection) {
-                            if ((src.type === 'Place' && dst.type === 'Place') || (src.type === 'Transition' && dst.type === 'Transition')) {
-                                showToast(`Invalid: Cannot connect ${src.type} to ${dst.type}!`, true);
-                            } else {
+                            else if (src.type === 'Place' && dst.type === 'Page' && dst.subType === 'Service') {
+                                // Service Smart Routing
+                                let chCount = Object.values(elements).filter(e => e.parentId === dst.id && e.subType === 'Channel').length;
+                                let chId = 'Channel' + counter++;
+                                elements[chId] = { id: chId, name: 'Client ' + (chCount+1), type: 'Page', subType: 'Channel', x: dst.x + 10, y: dst.y + 40 + (chCount*70), w: dst.w - 50, h: 60, parentId: dst.id };
+                                
+                                let reqP = 'P' + counter++;
+                                elements[reqP] = { id: reqP, name: 'request', type: 'Port', x: elements[chId].x + 20, y: elements[chId].y + 30, parentId: chId, isRef: true, targetId: src.id };
+                                
+                                let resP = 'P' + counter++;
+                                elements[resP] = { id: resP, name: 'response', type: 'Port', x: elements[chId].x + elements[chId].w - 20, y: elements[chId].y + 30, parentId: chId };
+                                validConnection = false;
+                            }
+                            else if (src.type === 'Page' && src.subType === 'Service' && dst.type === 'Place') {
+                                showToast("Draw an arc from a specific Client Channel response port instead!", true); validConnection = false;
+                            }
+                            else if (src.type === 'Port' && dst.type === 'Place') {
+                                src.isRef = true; src.targetId = dst.id; if(src.name !== 'request') src.name = 'response';
+                                validConnection = false;
+                            }
+                            else if (src.type === 'Place' && dst.type === 'Port') {
+                                dst.isRef = true; dst.targetId = src.id; if(dst.name !== 'response') dst.name = 'request';
+                                validConnection = false;
+                            }
+                            // Bipartite Graph constraints
+                            else if ((src.type === 'Place' && dst.type === 'Place') || (src.type === 'Transition' && dst.type === 'Transition')) {
+                                showToast(`Invalid: Cannot connect ${src.type} to ${dst.type}!`, true); validConnection = false;
+                            }
+
+                            if (validConnection) {
                                 arcs.push({ src: src.id, dst: dst.id, type: currentTool === 'Inhibitor' ? 'inhibitor' : 'normal' }); 
                             }
+                            markDirty(); 
                         }
-                        
-                        markDirty(); selectedForArc = null; setTool('Select');
+                        selectedForArc = null; setTool('Select');
                     }
                 } else { selectedForArc = null; }
                 redraw(); 
@@ -556,6 +571,7 @@
         });
 
         function getCenter(node) { return node.type === 'Page' ? { x: node.x + node.w/2, y: node.y + node.h/2 } : { x: node.x, y: node.y }; }
+        
         function getPerimeterPoint(node, tx, ty) {
             const c = getCenter(node); const a = Math.atan2(ty - c.y, tx - c.x);
             if (node.type === 'Place' || node.type === 'Port') return { x: c.x + 20 * Math.cos(a), y: c.y + 20 * Math.sin(a) };
@@ -581,22 +597,25 @@
                 const theme = cols.dineros[n.subType] || {bg: cols.pageGrad1, border: cols.pageBorder};
                 ctx.fillStyle = theme.bg; ctx.strokeStyle = isSel ? cols.selected : theme.border;
                 ctx.beginPath(); 
-                if (['Topic', 'Service'].includes(n.subType)) ctx.roundRect(n.x, n.y, n.w, n.h, 24); 
+                if (['Topic', 'Service', 'Channel'].includes(n.subType)) ctx.roundRect(n.x, n.y, n.w, n.h, 24); 
                 else ctx.roundRect(n.x, n.y, n.w, n.h, 8); 
                 ctx.fill(); ctx.stroke();
                 
                 // Title
-                ctx.fillStyle = cols.textMain; ctx.font = ['Topic', 'Service'].includes(n.subType) ? 'italic 14px system-ui' : 'italic 16px serif';
-                ctx.textAlign = ['Topic', 'Service'].includes(n.subType) ? 'center' : 'left';
+                ctx.fillStyle = cols.textMain; ctx.font = ['Topic', 'Service', 'Channel'].includes(n.subType) ? 'italic 14px system-ui' : 'italic 16px serif';
+                ctx.textAlign = ['Topic', 'Service', 'Channel'].includes(n.subType) ? 'center' : 'left';
                 if (['Topic', 'Service'].includes(n.subType)) {
                     ctx.fillText(`«${n.subType.toLowerCase()}»`, n.x + n.w/2, n.y + 30);
                     ctx.fillText(`\\${n.name}`, n.x + n.w/2, n.y + 60);
+                } else if (n.subType === 'Channel') {
+                    ctx.fillText(`«channel»`, n.x + n.w/2, n.y + 30);
+                    ctx.fillText(n.name, n.x + n.w/2, n.y + 50);
                 } else {
                     ctx.fillText(n.name, n.x + 12, n.y + 24);
                 }
 
                 // DiNeROS Metadata Tags
-                if (n.meta && !['Topic', 'Service'].includes(n.subType)) {
+                if (n.meta && !['Topic', 'Service', 'Channel'].includes(n.subType)) {
                     ctx.font = 'italic 12px serif'; ctx.textAlign = 'right';
                     let tagX = n.x + n.w - 10;
                     const drawTag = (text) => {
@@ -654,14 +673,24 @@
             const pages = Object.values(elements).filter(e => e.type === 'Page').sort((a, b) => getDepth(a) - getDepth(b));
             pages.forEach(p => renderElement(p, cols));
             
-            // 2. Reference Lines
+            // 2. Reference Lines (Ports to Places)
             for (let id in elements) { 
                 const e = elements[id]; 
                 if (e.isRef && e.targetId && elements[e.targetId]) {
                     const tg = elements[e.targetId];
-                    const st = getPerimeterPoint(e, getCenter(tg).x, getCenter(tg).y);
-                    const en = getPerimeterPoint(tg, getCenter(e).x, getCenter(e).y);
-                    ctx.save(); ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.lineTo(en.x, en.y); ctx.strokeStyle = cols.refLine; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.restore();
+                    let s = e, d = tg; 
+                    if (e.name === 'publisher' || e.name === 'request') { s = tg; d = e; }
+                    
+                    const st = getPerimeterPoint(s, getCenter(d).x, getCenter(d).y);
+                    const en = getPerimeterPoint(d, getCenter(s).x, getCenter(s).y);
+                    const a = Math.atan2(en.y - st.y, en.x - st.x);
+                    
+                    ctx.save(); ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.lineTo(en.x, en.y); 
+                    ctx.strokeStyle = cols.refLine; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke(); 
+                    ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(en.x, en.y);
+                    ctx.lineTo(en.x - 12 * Math.cos(a - Math.PI / 8), en.y - 12 * Math.sin(a - Math.PI / 8));
+                    ctx.lineTo(en.x - 12 * Math.cos(a + Math.PI / 8), en.y - 12 * Math.sin(a + Math.PI / 8));
+                    ctx.fillStyle = cols.refLine; ctx.fill(); ctx.restore();
                 }
             }
 
@@ -710,7 +739,7 @@
             function serializeNode(id) {
                 const el = elements[id]; let out = '';
                 if (el.type === 'Page') {
-                    const tMap = { 'Node': 'nodePage', 'CBGroup': 'callbackPage', 'Timer': 'page', 'Sub': 'page', 'Server': 'page', 'Topic': 'page', 'Service': 'page' };
+                    const tMap = { 'Node': 'nodePage', 'CBGroup': 'callbackPage', 'Timer': 'page', 'Sub': 'page', 'Server': 'page', 'Topic': 'page', 'Service': 'page', 'Channel': 'page' };
                     const tag = tMap[el.subType] || 'page';
                     
                     out += `      <${tag} id="${el.id}">\n        <name><text>${el.name}</text></name>\n`;
