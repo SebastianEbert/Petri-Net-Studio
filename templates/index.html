@@ -6,6 +6,7 @@
     <title>Modern Petri Net Editor</title>
     <style>
         :root {
+            /* Light Theme Variables (Default) */
             --bg-color: #fafbfc;
             --dot-color: #cbd5e1;
             --panel-bg: rgba(255, 255, 255, 0.85);
@@ -14,33 +15,55 @@
             --text-muted: #64748b;
             --border-light: rgba(226, 232, 240, 0.8);
             --danger: #ef4444;
+            --hover-bg: rgba(241, 245, 249, 0.8);
+            --zoom-bg: #ffffff;
+            --zoom-hover: #f1f5f9;
+        }
+
+        /* Dark Theme Variables */
+        body.dark-mode {
+            --bg-color: #0f172a;
+            --dot-color: #334155;
+            --panel-bg: rgba(30, 41, 59, 0.85);
+            --text-main: #ffffff; /* Brighter pure white for active text */
+            --text-muted: #cbd5e1; /* Brighter slate for inactive text */
+            --border-light: rgba(71, 85, 105, 0.8);
+            --hover-bg: rgba(51, 65, 85, 0.8);
+            --zoom-bg: #1e293b;
+            --zoom-hover: #334155;
+            --primary: #00bfff; /* Bright neon blue for Layout and Model Name */
         }
 
         body { 
             margin: 0; display: flex; height: 100vh; 
             font-family: 'Inter', system-ui, sans-serif; 
             overflow: hidden; background-color: var(--bg-color); color: var(--text-main);
-            user-select: none; 
+            user-select: none; transition: background-color 0.3s ease;
         }
         
-        #canvas-container {
-            flex-grow: 1; position: relative; background-color: var(--bg-color);
-        }
-
+        #canvas-container { flex-grow: 1; position: relative; background-color: var(--bg-color); transition: background-color 0.3s ease; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: default; }
 
         .glass-panel {
             position: absolute; background: var(--panel-bg); backdrop-filter: blur(16px); 
             border: 1px solid var(--border-light); border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); z-index: 100;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); z-index: 100;
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
 
         /* Floating Toolbars */
         #toolbar { bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 8px; }
         #file-menu { top: 20px; left: 20px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
-        
-        /* NEW: Top Right Menu for Layout Tools */
         #layout-menu { top: 20px; right: 20px; display: flex; align-items: center; gap: 4px; padding: 8px; }
+
+        /* Dark Mode Toggle (Bottom Left) */
+        #theme-toggle {
+            bottom: 30px; left: 30px; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer; border-radius: 12px; padding: 0;
+            color: var(--text-main);
+        }
+        #theme-toggle:hover { background: var(--hover-bg); }
 
         #model-name-display {
             font-size: 14px; font-weight: 700; color: var(--primary);
@@ -52,32 +75,32 @@
 
         #zoom-controls {
             position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: center;
-            border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1; background: #ffffff; 
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15); z-index: 9999;
+            border-radius: 12px; overflow: hidden; border: 1px solid var(--border-light); background: var(--zoom-bg); 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); z-index: 9999;
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
 
         .zoom-btn { 
             background: transparent; border: none; width: 44px; height: 44px; 
-            font-size: 22px; font-weight: 500; color: #334155; cursor: pointer; 
-            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 500; color: var(--text-main); cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; transition: background 0.2s;
         }
-        .zoom-btn:hover { background: #f1f5f9; color: #0f172a; }
+        .zoom-btn:hover { background: var(--zoom-hover); }
         
         #zoom-label { 
             font-size: 12px; font-weight: 700; color: var(--text-muted); padding: 8px 0; width: 100%; 
-            text-align: center; cursor: pointer; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; background: #f8fafc;
+            text-align: center; cursor: pointer; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); 
         }
-        #zoom-label:hover { color: var(--text-main); background: #f1f5f9; }
+        #zoom-label:hover { color: var(--text-main); background: var(--zoom-hover); }
 
         .tool-btn {
             background: transparent; border: none; padding: 10px 14px; border-radius: 10px;
             font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s ease;
-            display: flex; align-items: center; gap: 6px;
         }
         
-        .tool-btn:hover { color: var(--text-main); background: rgba(241, 245, 249, 0.8); }
-        .tool-btn.active { background: var(--text-main); color: white; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2); }
-        .divider { width: 1px; height: 24px; background-color: #e2e8f0; margin: 0 6px; }
+        .tool-btn:hover { color: var(--text-main); background: var(--hover-bg); }
+        .tool-btn.active { background: var(--text-main); color: var(--bg-color); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); }
+        .divider { width: 1px; height: 24px; background-color: var(--border-light); margin: 0 6px; }
 
         #help-text {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.8); color: white; 
@@ -109,8 +132,10 @@
         </nav>
 
         <nav id="layout-menu" class="glass-panel">
-            <button class="tool-btn" id="btn-autolayout" style="color: #4f46e5;">✨ Auto Layout</button>
+            <button class="tool-btn" id="btn-autolayout" style="color: var(--primary);">✨ Auto Layout</button>
         </nav>
+
+        <button id="theme-toggle" class="glass-panel" title="Toggle Dark Mode">🌙</button>
 
         <nav id="toolbar" class="glass-panel">
             <button class="tool-btn active" data-tool="Select">Cursor</button>
@@ -143,6 +168,7 @@
         const zoomLabel = document.getElementById('zoom-label');
         const modelNameDisplay = document.getElementById('model-name-display');
         const toastUI = document.getElementById('toast');
+        const themeToggle = document.getElementById('theme-toggle');
         let width, height;
 
         // Viewport & State
@@ -156,6 +182,33 @@
         
         let modelName = "Untitled_Net", isDirty = false, fileHandle = null; 
 
+        // --- Dark Mode Logic ---
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            themeToggle.innerText = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+            redraw(); 
+        });
+
+        function getColors() {
+            const isDark = document.body.classList.contains('dark-mode');
+            return {
+                grid: isDark ? '#334155' : '#cbd5e1',
+                line: isDark ? '#94a3b8' : '#334155',
+                refLine: isDark ? '#64748b' : '#94a3b8',
+                nodeBg: isDark ? '#1e293b' : '#ffffff',
+                nodeBorder: isDark ? '#00ff41' : '#1e293b', // Matrix Green
+                textMain: isDark ? '#ffffff' : '#0f172a',
+                textMuted: isDark ? '#cbd5e1' : '#475569',
+                pageGrad1: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                pageGrad2: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(248, 250, 252, 0.95)',
+                pageTitleBg: isDark ? 'rgba(51, 65, 85, 0.7)' : 'rgba(241, 245, 249, 0.7)',
+                pageBorder: isDark ? '#00ff41' : 'rgba(226, 232, 240, 0.8)', // Matrix Green
+                selected: isDark ? '#00bfff' : '#4f46e5', // Bright Blue Selection
+                target: '#10b981'
+            };
+        }
+
+        // --- UI & State Helpers ---
         function showToast(msg, isError = false) {
             toastUI.innerText = msg; toastUI.style.background = isError ? '#ef4444' : '#10b981';
             toastUI.classList.add('show'); setTimeout(() => toastUI.classList.remove('show'), 2500);
@@ -199,61 +252,38 @@
         document.getElementById('zoom-out').addEventListener('click', () => setZoom(scale * 0.8));
         document.getElementById('zoom-label').addEventListener('click', () => { scale = 1; offsetX = 0; offsetY = 0; setZoom(1); });
 
-        // --- Recursive Auto Layout Algorithm ---
+        // --- Recursive Auto Layout ---
         function runAutoLayout(parentId = null, startX = 100, startY = 100) {
             const children = Object.values(elements).filter(e => e.parentId === parentId);
             if (children.length === 0) return { w: 240, h: 180 };
 
             const cols = Math.ceil(Math.sqrt(children.length));
             let paddingX = 100, paddingY = 100, titleBar = 60;
-            
-            let cx = startX + paddingX;
-            let cy = startY + (parentId ? titleBar : paddingY);
-            let rowMaxH = 0;
-            let maxW = 0;
+            let cx = startX + paddingX, cy = startY + (parentId ? titleBar : paddingY);
+            let rowMaxH = 0, maxW = 0;
 
             children.forEach((child, i) => {
-                if (i > 0 && i % cols === 0) {
-                    cx = startX + paddingX;
-                    cy += rowMaxH + paddingY;
-                    rowMaxH = 0;
-                }
-
+                if (i > 0 && i % cols === 0) { cx = startX + paddingX; cy += rowMaxH + paddingY; rowMaxH = 0; }
                 if (child.type === 'Page') {
                     const size = runAutoLayout(child.id, cx, cy);
-                    child.x = cx; child.y = cy;
-                    child.w = size.w; child.h = size.h;
-                    cx += size.w + paddingX;
-                    rowMaxH = Math.max(rowMaxH, size.h);
+                    child.x = cx; child.y = cy; child.w = size.w; child.h = size.h;
+                    cx += size.w + paddingX; rowMaxH = Math.max(rowMaxH, size.h);
                 } else {
-                    child.x = cx; child.y = cy;
-                    cx += 60 + paddingX; 
-                    rowMaxH = Math.max(rowMaxH, 60);
+                    child.x = cx; child.y = cy; cx += 60 + paddingX; rowMaxH = Math.max(rowMaxH, 60);
                 }
                 maxW = Math.max(maxW, cx - startX);
             });
             let totalH = cy + rowMaxH + paddingY - startY;
-
             return { w: Math.max(240, maxW), h: Math.max(180, totalH) };
         }
 
         document.getElementById('btn-autolayout').addEventListener('click', () => {
-            if (Object.keys(elements).length === 0) {
-                showToast("Canvas is empty!", true);
-                return;
-            }
-            
-            // Run recursive layout from the absolute center root
+            if (Object.keys(elements).length === 0) { showToast("Canvas is empty!", true); return; }
             runAutoLayout(null, 100, 100);
-            
-            // Reset view so the user can see the newly organized net
-            scale = 1; offsetX = 0; offsetY = 0; setZoom(1);
-            markDirty();
-            redraw();
-            showToast("Elements organized!");
+            scale = 1; offsetX = 0; offsetY = 0; setZoom(1); markDirty(); redraw(); showToast("Elements organized!");
         });
 
-        // --- Persistency: Smart Save / Load ---
+        // --- PNML Save / Load ---
         function generatePNMLString() {
             let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">\n';
             xml += `  <net id="${modelName}" type="http://www.pnml.org/version-2009/grammar/ptnet">\n`;
@@ -295,9 +325,7 @@
             const xmlData = generatePNMLString();
             if (window.showSaveFilePicker) {
                 try {
-                    if (!fileHandle) {
-                        fileHandle = await window.showSaveFilePicker({ suggestedName: modelName + '.pnml', types: [{ description: 'PNML Files', accept: { 'application/xml': ['.pnml', '.xml'] } }] });
-                    }
+                    if (!fileHandle) fileHandle = await window.showSaveFilePicker({ suggestedName: modelName + '.pnml', types: [{ description: 'PNML Files', accept: { 'application/xml': ['.pnml', '.xml'] } }] });
                     const writable = await fileHandle.createWritable();
                     await writable.write(xmlData); await writable.close();
                     markClean(); showToast("File overwritten silently!");
@@ -367,12 +395,11 @@
             }; reader.readAsText(file);
         }
 
-        // --- File Bindings ---
+        // --- Event Listeners ---
         document.getElementById('btn-save').addEventListener('click', handleSave);
         document.getElementById('btn-open').addEventListener('click', handleOpen);
         document.getElementById('file-input').addEventListener('change', (e) => { if (e.target.files.length > 0) { fileHandle = null; importPNML(e.target.files[0]); e.target.value = ''; } });
 
-        // --- Global Keyboard Shortcuts ---
         window.addEventListener('keydown', function(e) {
             if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.code === 'KeyS')) {
                 e.preventDefault(); e.stopPropagation(); handleSave(); return false;
@@ -382,7 +409,7 @@
             }
         }, { capture: true });
 
-        // --- Core Logic & Helpers ---
+        // --- Interaction Logic ---
         function updateHelp(text) { helpTextUI.innerText = text; }
 
         function setTool(toolName) {
@@ -469,17 +496,30 @@
                 const parent = getDeepestPageAt(worldX, worldY);
                 const id = (isRef ? 'R' : '') + type[0] + counter++;
                 elements[id] = { id, name: id, type, x: worldX, y: worldY, isRef, tokens: 0, parentId: parent ? parent.id : null, targetId: null, w: type === 'Page' ? 240 : null, h: type === 'Page' ? 180 : null };
-                markDirty();
-                if (isRef) linkingReference = elements[id]; else setTool('Select');
-                redraw();
+                markDirty(); if (isRef) linkingReference = elements[id]; else setTool('Select'); redraw();
             }
             else if (currentTool === 'Token') { const n = getNodeAt(worldX, worldY); if (n && n.type === 'Place') { n.tokens++; markDirty(); setTool('Select'); } }
             else if (currentTool === 'Arc' || currentTool === 'Inhibitor') {
                 const n = getNodeAt(worldX, worldY);
                 if (n) {
-                    if (!selectedForArc) selectedForArc = n;
-                    else if (selectedForArc.id !== n.id) { arcs.push({ src: selectedForArc.id, dst: n.id, type: currentTool === 'Inhibitor' ? 'inhibitor' : 'normal' }); markDirty(); setTool('Select'); }
-                } else selectedForArc = null;
+                    if (!selectedForArc) {
+                        selectedForArc = n;
+                    } else if (selectedForArc.id !== n.id) {
+                        // Enforce Bipartite Graph rules
+                        if ((selectedForArc.type === 'Place' && n.type === 'Place') || 
+                            (selectedForArc.type === 'Transition' && n.type === 'Transition')) {
+                            showToast(`Invalid: Cannot connect ${selectedForArc.type} to ${n.type}!`, true);
+                            selectedForArc = null;
+                            setTool('Select');
+                        } else {
+                            arcs.push({ src: selectedForArc.id, dst: n.id, type: currentTool === 'Inhibitor' ? 'inhibitor' : 'normal' }); 
+                            markDirty(); 
+                            setTool('Select');
+                        }
+                    }
+                } else {
+                    selectedForArc = null;
+                }
                 redraw(); 
             }
         });
@@ -501,62 +541,65 @@
 
         canvas.addEventListener('mouseup', () => { draggingElement = null; resizingPage = null; if (isPanning) { isPanning = false; canvas.style.cursor = currentTool === 'Select' ? 'default' : 'crosshair'; } });
 
-        // --- Render System ---
-        function drawGrid() {
-            ctx.fillStyle = '#cbd5e1'; const sX = -offsetX / scale, sY = -offsetY / scale, eX = (width - offsetX) / scale, eY = (height - offsetY) / scale;
+        // --- Render System with Dynamic Colors ---
+        function drawGrid(cols) {
+            ctx.fillStyle = cols.grid; const sX = -offsetX / scale, sY = -offsetY / scale, eX = (width - offsetX) / scale, eY = (height - offsetY) / scale;
             const fX = Math.floor(sX / 24) * 24, fY = Math.floor(sY / 24) * 24;
             for (let x = fX; x < eX; x += 24) for (let y = fY; y < eY; y += 24) { ctx.beginPath(); ctx.arc(x, y, 1.5 / scale, 0, Math.PI * 2); ctx.fill(); }
         }
 
-        function drawArc(src, dst, type) {
+        function drawArc(src, dst, type, cols) {
             const st = getPerimeterPoint(src, getCenter(dst).x, getCenter(dst).y), en = getPerimeterPoint(dst, getCenter(src).x, getCenter(src).y), a = Math.atan2(en.y - st.y, en.x - st.x);
-            ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.strokeStyle = '#334155'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.strokeStyle = cols.line; ctx.lineWidth = 1.5;
             if (type === 'inhibitor') {
                 ctx.lineTo(en.x - 10 * Math.cos(a), en.y - 10 * Math.sin(a)); ctx.stroke();
-                ctx.beginPath(); ctx.arc(en.x - 5 * Math.cos(a), en.y - 5 * Math.sin(a), 5, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.arc(en.x - 5 * Math.cos(a), en.y - 5 * Math.sin(a), 5, 0, Math.PI * 2); ctx.fillStyle = cols.nodeBg; ctx.fill(); ctx.stroke();
             } else {
                 ctx.lineTo(en.x, en.y); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(en.x, en.y); ctx.lineTo(en.x - 12 * Math.cos(a - Math.PI / 8), en.y - 12 * Math.sin(a - Math.PI / 8)); ctx.lineTo(en.x - 12 * Math.cos(a + Math.PI / 8), en.y - 12 * Math.sin(a + Math.PI / 8)); ctx.fillStyle = '#334155'; ctx.fill();
+                ctx.beginPath(); ctx.moveTo(en.x, en.y); ctx.lineTo(en.x - 12 * Math.cos(a - Math.PI / 8), en.y - 12 * Math.sin(a - Math.PI / 8)); ctx.lineTo(en.x - 12 * Math.cos(a + Math.PI / 8), en.y - 12 * Math.sin(a + Math.PI / 8)); ctx.fillStyle = cols.line; ctx.fill();
             }
         }
 
-        function renderElement(n) {
+        function renderElement(n, cols) {
             ctx.save();
             const isSel = n.id === (selectedElement?.id), isTgt = n.id === (selectedForArc?.id);
-            ctx.strokeStyle = isSel ? '#4f46e5' : (isTgt ? '#10b981' : '#1e293b'); ctx.lineWidth = isSel || isTgt ? 2.5 : 1.5; if (n.isRef) ctx.setLineDash([6, 6]);
+            ctx.strokeStyle = isSel ? cols.selected : (isTgt ? cols.target : cols.nodeBorder); 
+            ctx.lineWidth = isSel || isTgt ? 2.5 : 1.5; if (n.isRef) ctx.setLineDash([6, 6]);
 
             if (n.type === 'Page') {
-                ctx.shadowColor = 'rgba(15, 23, 42, 0.08)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 12;
-                const gr = ctx.createLinearGradient(n.x, n.y, n.x, n.y + n.h); gr.addColorStop(0, 'rgba(255, 255, 255, 0.95)'); gr.addColorStop(1, 'rgba(248, 250, 252, 0.95)');
-                ctx.fillStyle = gr; ctx.beginPath(); ctx.roundRect(n.x, n.y, n.w, n.h, 16); ctx.fill(); ctx.shadowColor = 'transparent'; ctx.strokeStyle = isSel ? '#4f46e5' : 'rgba(203, 213, 225, 0.8)'; ctx.stroke();
-                ctx.fillStyle = 'rgba(241, 245, 249, 0.7)'; ctx.beginPath(); ctx.roundRect(n.x, n.y, n.w, 36, [16, 16, 0, 0]); ctx.fill();
-                ctx.beginPath(); ctx.moveTo(n.x, n.y + 36); ctx.lineTo(n.x + n.w, n.y + 36); ctx.strokeStyle = 'rgba(226, 232, 240, 0.8)'; ctx.lineWidth = 1; ctx.stroke();
-                ctx.fillStyle = isSel ? '#4f46e5' : '#334155'; ctx.font = '600 13px system-ui'; ctx.fillText(n.name, n.x + 16, n.y + 23);
-                if (isSel) { ctx.fillStyle = '#4f46e5'; ctx.beginPath(); ctx.arc(n.x + n.w - 2, n.y + n.h - 2, 5 / scale, 0, Math.PI*2); ctx.fill(); }
+                ctx.shadowColor = document.body.classList.contains('dark-mode') ? 'rgba(0,0,0,0.5)' : 'rgba(15, 23, 42, 0.08)'; 
+                ctx.shadowBlur = 24; ctx.shadowOffsetY = 12;
+                const gr = ctx.createLinearGradient(n.x, n.y, n.x, n.y + n.h); gr.addColorStop(0, cols.pageGrad1); gr.addColorStop(1, cols.pageGrad2);
+                ctx.fillStyle = gr; ctx.beginPath(); ctx.roundRect(n.x, n.y, n.w, n.h, 16); ctx.fill(); ctx.shadowColor = 'transparent'; ctx.strokeStyle = isSel ? cols.selected : cols.pageBorder; ctx.stroke();
+                ctx.fillStyle = cols.pageTitleBg; ctx.beginPath(); ctx.roundRect(n.x, n.y, n.w, 36, [16, 16, 0, 0]); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(n.x, n.y + 36); ctx.lineTo(n.x + n.w, n.y + 36); ctx.strokeStyle = cols.pageBorder; ctx.lineWidth = 1; ctx.stroke();
+                ctx.fillStyle = isSel ? cols.selected : cols.textMain; ctx.font = '600 13px system-ui'; ctx.fillText(n.name, n.x + 16, n.y + 23);
+                if (isSel) { ctx.fillStyle = cols.selected; ctx.beginPath(); ctx.arc(n.x + n.w - 2, n.y + n.h - 2, 5 / scale, 0, Math.PI*2); ctx.fill(); }
             } else {
-                ctx.fillStyle = '#fff';
+                ctx.fillStyle = cols.nodeBg;
                 if (n.type === 'Place') {
                     ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                    if (n.tokens === 1) { ctx.beginPath(); ctx.arc(n.x, n.y, 6, 0, Math.PI*2); ctx.fillStyle = '#0f172a'; ctx.fill(); }
-                    else if (n.tokens > 1) { ctx.fillStyle = '#0f172a'; ctx.font = '800 16px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n.tokens, n.x, n.y); }
+                    if (n.tokens === 1) { ctx.beginPath(); ctx.arc(n.x, n.y, 6, 0, Math.PI*2); ctx.fillStyle = cols.textMain; ctx.fill(); }
+                    else if (n.tokens > 1) { ctx.fillStyle = cols.textMain; ctx.font = '800 16px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n.tokens, n.x, n.y); }
                 } else if (n.type === 'Transition') { ctx.beginPath(); ctx.roundRect(n.x - 15, n.y - 20, 30, 40, 4); ctx.fill(); ctx.stroke(); }
-                ctx.restore(); ctx.fillStyle = isSel ? '#4f46e5' : '#475569'; ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(n.name, n.x, n.y + 26);
+                ctx.restore(); ctx.fillStyle = isSel ? cols.selected : cols.textMuted; ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(n.name, n.x, n.y + 26);
             }
             ctx.restore();
         }
 
         function redraw() {
-            ctx.clearRect(0, 0, width, height); ctx.save(); ctx.translate(offsetX, offsetY); ctx.scale(scale, scale); drawGrid(); 
+            const cols = getColors();
+            ctx.clearRect(0, 0, width, height); ctx.save(); ctx.translate(offsetX, offsetY); ctx.scale(scale, scale); drawGrid(cols); 
             const sIds = Object.keys(elements).sort((a, b) => getDepth(elements[a]) - getDepth(elements[b]));
-            sIds.forEach(id => { if (elements[id].type === 'Page') renderElement(elements[id]); });
+            sIds.forEach(id => { if (elements[id].type === 'Page') renderElement(elements[id], cols); });
             for (let id in elements) { const e = elements[id]; if (e.isRef && e.targetId && elements[e.targetId]) {
                 const tg = elements[e.targetId], c = getCenter(tg), a = Math.atan2(c.y - e.y, c.x - e.x);
-                ctx.save(); ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(c.x, c.y); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke();
+                ctx.save(); ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(c.x, c.y); ctx.strokeStyle = cols.refLine; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(c.x - 10 * Math.cos(a - Math.PI / 6), c.y - 10 * Math.sin(a - Math.PI / 6)); ctx.lineTo(c.x, c.y); ctx.lineTo(c.x - 10 * Math.cos(a + Math.PI / 6), c.y - 10 * Math.sin(a + Math.PI / 6)); ctx.stroke(); ctx.restore();
             }}
-            if (linkingReference) { const a = Math.atan2(mouseWorldY - linkingReference.y, mouseWorldX - linkingReference.x); ctx.save(); ctx.beginPath(); ctx.moveTo(linkingReference.x, linkingReference.y); ctx.lineTo(mouseWorldX, mouseWorldY); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.restore(); }
-            arcs.forEach(arc => { if (elements[arc.src] && elements[arc.dst]) drawArc(elements[arc.src], elements[arc.dst], arc.type); });
-            sIds.forEach(id => { if (elements[id].type !== 'Page') renderElement(elements[id]); });
+            if (linkingReference) { const a = Math.atan2(mouseWorldY - linkingReference.y, mouseWorldX - linkingReference.x); ctx.save(); ctx.beginPath(); ctx.moveTo(linkingReference.x, linkingReference.y); ctx.lineTo(mouseWorldX, mouseWorldY); ctx.strokeStyle = cols.refLine; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.restore(); }
+            arcs.forEach(arc => { if (elements[arc.src] && elements[arc.dst]) drawArc(elements[arc.src], elements[arc.dst], arc.type, cols); });
+            sIds.forEach(id => { if (elements[id].type !== 'Page') renderElement(elements[id], cols); });
             ctx.restore(); 
         }
     </script>
