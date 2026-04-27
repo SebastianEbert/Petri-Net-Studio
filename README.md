@@ -1,4 +1,4 @@
-# Modern Petri Net Editor
+# Petri Net Editor
 
 ![Petri Net Editor Screenshot](image.png)
 
@@ -20,7 +20,7 @@ It supports standard bipartite graph rules, hierarchical pages, discrete & timed
 
 ---
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 
