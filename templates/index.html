@@ -10,7 +10,6 @@
             --dot-color: #cbd5e1;
             --panel-bg: rgba(255, 255, 255, 0.85);
             --primary: #4f46e5;
-            --primary-hover: #4338ca;
             --text-main: #0f172a;
             --text-muted: #64748b;
             --border-light: rgba(226, 232, 240, 0.8);
@@ -18,69 +17,81 @@
 
         body { 
             margin: 0; display: flex; height: 100vh; 
-            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            font-family: 'Inter', system-ui, sans-serif; 
             overflow: hidden; background-color: var(--bg-color); color: var(--text-main);
             user-select: none; 
         }
         
         #canvas-container {
-            flex-grow: 1; position: relative;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(var(--dot-color) 1px, transparent 0);
-            background-size: 24px 24px;
-            background-position: -12px -12px;
+            flex-grow: 1; position: relative; background-color: var(--bg-color);
         }
 
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: default; }
 
-        #toolbar {
+        /* Floating Toolbars */
+        .glass-panel {
             position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--panel-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-light);
-            padding: 8px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1), 0 10px 15px -5px rgba(0, 0, 0, 0.04);
-            z-index: 100;
+            background: var(--panel-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-light); border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); z-index: 100;
         }
+
+        #toolbar {
+            bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 4px; padding: 8px;
+        }
+
+        #file-menu {
+            top: 20px; left: 20px;
+            display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+        }
+
+        #model-name-display {
+            font-size: 14px; font-weight: 700; color: var(--primary);
+            padding: 0 12px; cursor: pointer; border-right: 1px solid var(--border-light);
+        }
+        
+        #model-name-display:hover { text-decoration: underline; }
+
+        /* Redesigned Vertical Zoom Controls (Bottom Right) */
+        #zoom-controls {
+            position: absolute; bottom: 30px; right: 30px;
+            display: flex; flex-direction: column; align-items: center;
+            border-radius: 12px; overflow: hidden;
+            border: 1px solid #cbd5e1; background: #ffffff; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15); z-index: 9999;
+        }
+
+        .zoom-btn { 
+            background: transparent; border: none; width: 44px; height: 44px; 
+            font-size: 22px; font-weight: 500; color: #334155; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center;
+        }
+        .zoom-btn:hover { background: #f1f5f9; color: #0f172a; }
+        
+        #zoom-label { 
+            font-size: 12px; font-weight: 700; color: var(--text-muted);
+            padding: 8px 0; width: 100%; text-align: center; cursor: pointer;
+            border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        #zoom-label:hover { color: var(--text-main); background: #f1f5f9; }
 
         .tool-btn {
-            background: transparent;
-            border: none;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: transparent; border: none; padding: 10px 14px; border-radius: 10px;
+            font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer;
+            transition: all 0.2s ease;
         }
-
-        .tool-btn:hover { color: var(--text-main); background: rgba(241, 245, 249, 0.8); }
         
-        .tool-btn.active { 
-            background: var(--text-main); 
-            color: white; 
-            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2); 
-        }
-
-        .divider {
-            width: 1px; height: 24px; background-color: #e2e8f0; margin: 0 6px;
-        }
+        .tool-btn:hover { color: var(--text-main); background: rgba(241, 245, 249, 0.8); }
+        .tool-btn.active { background: var(--text-main); color: white; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2); }
+        .divider { width: 1px; height: 24px; background-color: #e2e8f0; margin: 0 6px; }
 
         #help-text {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.8); color: white; backdrop-filter: blur(8px);
             padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 500;
-            pointer-events: none; opacity: 0.95; letter-spacing: 0.3px;
-            transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            pointer-events: none; opacity: 0.95;
         }
     </style>
 </head>
@@ -88,9 +99,17 @@
 
     <div id="canvas-container">
         <canvas id="editor"></canvas>
-        <div id="help-text">Select an element and press Backspace to delete, or double-click to rename</div>
+        <div id="help-text">Scroll to Zoom. Click and drag empty space to Pan.</div>
         
-        <nav id="toolbar">
+        <input type="file" id="file-input" accept=".pnml,.xml" style="display: none;" />
+
+        <nav id="file-menu" class="glass-panel">
+            <span id="model-name-display" title="Click to rename model">Untitled_Net</span>
+            <button class="tool-btn" id="btn-open">📂 Open</button>
+            <button class="tool-btn" id="btn-save">💾 Save PNML</button>
+        </nav>
+
+        <nav id="toolbar" class="glass-panel">
             <button class="tool-btn active" data-tool="Select">Cursor</button>
             <div class="divider"></div>
             <button class="tool-btn" data-tool="Place">Place</button>
@@ -106,42 +125,242 @@
             <button class="tool-btn" data-tool="Delete" style="color: #ef4444;">Eraser</button>
             <button class="tool-btn" data-tool="Clear" style="color: #ef4444;">Clear All</button>
         </nav>
+
+        <div id="zoom-controls">
+            <button class="zoom-btn" id="zoom-in" title="Zoom In">+</button>
+            <div id="zoom-label" title="Reset Zoom">100%</div>
+            <button class="zoom-btn" id="zoom-out" title="Zoom Out">−</button>
+        </div>
     </div>
 
     <script>
         const canvas = document.getElementById('editor');
         const ctx = canvas.getContext('2d');
         const helpTextUI = document.getElementById('help-text');
+        const zoomLabel = document.getElementById('zoom-label');
+        const modelNameDisplay = document.getElementById('model-name-display');
         let width, height;
 
-        // Editor State
+        // Viewport & State
+        let scale = 1, offsetX = 0, offsetY = 0;
+        let isPanning = false, panStartX = 0, panStartY = 0;
         let currentTool = 'Select';
-        let elements = {};
-        let arcs = []; 
-        let counter = 1;
+        let elements = {}, arcs = [], counter = 1;
+        let selectedElement = null, draggingElement = null, resizingPage = null;
+        let dragOffsetX = 0, dragOffsetY = 0, selectedForArc = null;
+        let linkingReference = null, mouseWorldX = 0, mouseWorldY = 0;
         
-        // Interaction State
-        let selectedElement = null;
-        let draggingElement = null;
-        let resizingPage = null;
-        let dragOffsetX = 0, dragOffsetY = 0;
-        let selectedForArc = null;
-        let linkingReference = null;
-        let mouseX = 0, mouseY = 0;
+        // Model State (Logical Root)
+        let modelName = "Untitled_Net";
 
-        function updateHelp(text) {
-            helpTextUI.innerText = text;
+        function updateModelName(newName) {
+            if (newName && newName.trim() !== "") {
+                modelName = newName.trim().replace(/\s+/g, '_');
+                modelNameDisplay.innerText = modelName;
+            }
         }
+
+        modelNameDisplay.addEventListener('click', () => {
+            updateModelName(prompt("Enter new model name:", modelName));
+        });
 
         function resizeCanvas() {
-            width = canvas.parentElement.clientWidth;
-            height = canvas.parentElement.clientHeight;
-            canvas.width = width;
-            canvas.height = height;
+            width = canvas.parentElement.clientWidth; height = canvas.parentElement.clientHeight;
+            canvas.width = width; canvas.height = height; redraw();
+        }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left, screenY = e.clientY - rect.top;
+            return { screenX, screenY, worldX: (screenX - offsetX) / scale, worldY: (screenY - offsetY) / scale };
+        }
+
+        function setZoom(newScale, screenX = width / 2, screenY = height / 2) {
+            newScale = Math.max(0.2, Math.min(newScale, 3));
+            const worldXBefore = (screenX - offsetX) / scale;
+            const worldYBefore = (screenY - offsetY) / scale;
+            scale = newScale;
+            offsetX = screenX - worldXBefore * scale;
+            offsetY = screenY - worldYBefore * scale;
+            zoomLabel.innerText = Math.round(scale * 100) + '%';
             redraw();
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const { screenX, screenY } = getMousePos(e);
+            setZoom(scale * (e.deltaY > 0 ? 0.9 : 1.1), screenX, screenY);
+        }, { passive: false });
+
+        document.getElementById('zoom-in').addEventListener('click', () => setZoom(scale * 1.2));
+        document.getElementById('zoom-out').addEventListener('click', () => setZoom(scale * 0.8));
+        document.getElementById('zoom-label').addEventListener('click', () => { scale = 1; offsetX = 0; offsetY = 0; setZoom(1); });
+
+        // --- Persistency: PNML Export ---
+        function exportPNML() {
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">\n';
+            xml += `  <net id="${modelName}" type="http://www.pnml.org/version-2009/grammar/ptnet">\n`;
+            xml += `    <name><text>${modelName}</text></name>\n`;
+            
+            // Invisible Logical Root Page
+            xml += `    <page id="root">\n`;
+
+            function serializeNode(id) {
+                const el = elements[id];
+                let out = '';
+                if (el.type === 'Page') {
+                    out += `      <page id="${el.id}">\n        <name><text>${el.name}</text></name>\n`;
+                    out += `        <graphics><position x="${el.x}" y="${el.y}"/><dimension x="${el.w}" y="${el.h}"/></graphics>\n`;
+                    for (let cid in elements) { if (elements[cid].parentId === el.id) out += serializeNode(cid); }
+                    out += `      </page>\n`;
+                } else if (el.type === 'Place') {
+                    const tag = el.isRef ? `referencePlace` : `place`;
+                    out += `      <${tag} id="${el.id}"${el.isRef ? ` ref="${el.targetId || ''}"` : ''}>\n`;
+                    out += `        <name><text>${el.name}</text></name>\n`;
+                    if (!el.isRef) out += `        <initialMarking><text>${el.tokens}</text></initialMarking>\n`;
+                    out += `        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n`;
+                    out += `      </${tag}>\n`;
+                } else if (el.type === 'Transition') {
+                    const tag = el.isRef ? `referenceTransition` : `transition`;
+                    out += `      <${tag} id="${el.id}"${el.isRef ? ` ref="${el.targetId || ''}"` : ''}>\n`;
+                    out += `        <name><text>${el.name}</text></name>\n`;
+                    out += `        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n`;
+                    out += `      </${tag}>\n`;
+                }
+                return out;
+            }
+
+            // Render all unparented items into the root page
+            for (let id in elements) { if (!elements[id].parentId) xml += serializeNode(id); }
+
+            arcs.forEach((arc, i) => {
+                xml += `      <arc id="a${i}" source="${arc.src}" target="${arc.dst}">\n`;
+                if (arc.type === 'inhibitor') xml += `        <toolspecific tool="ModernPetriEditor" version="1.0" type="inhibitor"/>\n`;
+                xml += `      </arc>\n`;
+            });
+
+            xml += '    </page>\n  </net>\n</pnml>';
+            
+            const blob = new Blob([xml], { type: 'text/xml' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${modelName}.pnml`;
+            a.click(); window.URL.revokeObjectURL(url);
+        }
+
+        // --- Persistency: PNML Import ---
+        function getChildTag(node, tagName) {
+            for(let i=0; i<node.children.length; i++) {
+                if(node.children[i].tagName.toLowerCase() === tagName.toLowerCase()) return node.children[i];
+            }
+            return null;
+        }
+
+        function importPNML(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(e.target.result, "application/xml");
+                
+                elements = {}; arcs = []; counter = 1; selectedElement = null; linkingReference = null;
+
+                function parseXMLNode(node, parentId) {
+                    for (let i = 0; i < node.children.length; i++) {
+                        let child = node.children[i];
+                        let tag = child.tagName.toLowerCase();
+                        let id = child.getAttribute('id');
+                        if (!id) continue;
+
+                        if (['place', 'transition', 'page', 'referenceplace', 'referencetransition'].includes(tag)) {
+                            let name = id;
+                            let nameNode = getChildTag(child, 'name');
+                            if (nameNode) {
+                                let textNode = getChildTag(nameNode, 'text');
+                                if (textNode) name = textNode.textContent;
+                            }
+
+                            let x = 100, y = 100, w = 240, h = 180;
+                            let graphicsNode = getChildTag(child, 'graphics');
+                            if (graphicsNode) {
+                                let posNode = getChildTag(graphicsNode, 'position');
+                                if (posNode) { x = parseFloat(posNode.getAttribute('x')); y = parseFloat(posNode.getAttribute('y')); }
+                                let dimNode = getChildTag(graphicsNode, 'dimension');
+                                if (dimNode) { w = parseFloat(dimNode.getAttribute('x')); h = parseFloat(dimNode.getAttribute('y')); }
+                            }
+
+                            if (tag === 'page') {
+                                elements[id] = { id, name, type: 'Page', x, y, w, h, isRef: false, parentId, tokens: 0 };
+                                parseXMLNode(child, id); // Recurse into sub-page
+                            } else if (tag === 'place') {
+                                let tokens = 0;
+                                let markNode = getChildTag(child, 'initialMarking');
+                                if (markNode) {
+                                    let textNode = getChildTag(markNode, 'text');
+                                    if (textNode) tokens = parseInt(textNode.textContent) || 0;
+                                }
+                                elements[id] = { id, name, type: 'Place', x, y, isRef: false, parentId, tokens };
+                            } else if (tag === 'transition') {
+                                elements[id] = { id, name, type: 'Transition', x, y, isRef: false, parentId, tokens: 0 };
+                            } else if (tag === 'referenceplace') {
+                                elements[id] = { id, name, type: 'Place', x, y, isRef: true, parentId, targetId: child.getAttribute('ref'), tokens: 0 };
+                            } else if (tag === 'referencetransition') {
+                                elements[id] = { id, name, type: 'Transition', x, y, isRef: true, parentId, targetId: child.getAttribute('ref'), tokens: 0 };
+                            }
+                        } else if (tag === 'arc') {
+                            let src = child.getAttribute('source');
+                            let dst = child.getAttribute('target');
+                            let type = 'normal';
+                            let tsNode = getChildTag(child, 'toolspecific');
+                            if (tsNode && tsNode.getAttribute('type') === 'inhibitor') type = 'inhibitor';
+                            arcs.push({src, dst, type});
+                        }
+                    }
+                }
+
+                // Locate the root structure
+                const net = doc.querySelector('net');
+                if (net) {
+                    // Extract Model Name
+                    let nameNode = getChildTag(net, 'name');
+                    if (nameNode) {
+                        let textNode = getChildTag(nameNode, 'text');
+                        if (textNode) updateModelName(textNode.textContent);
+                    } else {
+                        updateModelName(net.getAttribute('id') || "Imported_Net");
+                    }
+
+                    // Locate invisible Root Page and map its children directly to the canvas (null parent)
+                    const rootPage = getChildTag(net, 'page');
+                    if (rootPage) {
+                        parseXMLNode(rootPage, null);
+                    }
+                }
+
+                let maxNum = 0;
+                for (let id in elements) {
+                    let num = parseInt(id.replace(/\D/g, ''));
+                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                }
+                counter = maxNum + 1;
+
+                scale = 1; offsetX = 0; offsetY = 0; setZoom(1);
+            };
+            reader.readAsText(file);
+        }
+
+        // --- File Menu Events ---
+        document.getElementById('btn-save').addEventListener('click', exportPNML);
+        document.getElementById('btn-open').addEventListener('click', () => { document.getElementById('file-input').click(); });
+        document.getElementById('file-input').addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                importPNML(e.target.files[0]);
+                e.target.value = '';
+            }
+        });
+
+        // --- Tool Management ---
+        function updateHelp(text) { helpTextUI.innerText = text; }
 
         function setTool(toolName) {
             currentTool = toolName;
@@ -149,448 +368,224 @@
             if (toolName !== 'Select') selectedElement = null;
             
             if (linkingReference && toolName !== 'Ref Place' && toolName !== 'Ref Transition') {
-                delete elements[linkingReference.id];
-                linkingReference = null;
+                delete elements[linkingReference.id]; linkingReference = null;
             }
             
             document.querySelectorAll('.tool-btn').forEach(b => {
-                b.classList.remove('active');
-                if (b.getAttribute('data-tool') === toolName) b.classList.add('active');
+                if (b.parentElement.id === 'toolbar') {
+                    b.classList.remove('active');
+                    if (b.getAttribute('data-tool') === toolName) b.classList.add('active');
+                }
             });
             
             canvas.style.cursor = toolName === 'Select' ? 'default' : 'crosshair';
-            
-            if (toolName === 'Select') updateHelp("Select an element and press Backspace to delete, or double-click to rename");
-            else if (toolName.startsWith('Ref')) updateHelp(`Click to place a ${toolName}`);
-            else if (toolName === 'Arc' || toolName === 'Inhibitor') updateHelp("Click a source, then click a destination to connect");
-            else if (toolName === 'Delete') updateHelp("Click any element or page to instantly delete it and its contents");
-            else updateHelp(`Click anywhere to place a ${toolName}`);
-            
             redraw();
         }
 
-        document.querySelectorAll('.tool-btn').forEach(btn => {
+        document.querySelectorAll('#toolbar .tool-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tool = e.target.getAttribute('data-tool');
                 if (tool === 'Clear') { 
                     elements = {}; arcs = []; counter = 1; selectedElement = null; 
-                    linkingReference = null; setTool('Select'); redraw(); return; 
+                    linkingReference = null; scale = 1; offsetX = 0; offsetY = 0; 
+                    setZoom(1); setTool('Select'); return; 
                 }
                 setTool(tool);
             });
         });
 
-        // --- Core Deletion Logic ---
+        // --- Helpers & Interaction ---
         function deleteElementTree(id) {
             if (!elements[id]) return;
-
-            // 1. If it's a Page, recursively delete all its direct children first
             if (elements[id].type === 'Page') {
-                for (let childId in elements) {
-                    if (elements[childId].parentId === id) {
-                        deleteElementTree(childId);
-                    }
-                }
+                for (let cid in elements) { if (elements[cid].parentId === id) deleteElementTree(cid); }
             }
-
-            // 2. Delete any Reference Nodes that point to this node
-            for (let refId in elements) {
-                if (elements[refId].isRef && elements[refId].targetId === id) {
-                    deleteElementTree(refId); 
-                }
-            }
-
-            // 3. Remove any arcs connected to this node (both directions)
-            arcs = arcs.filter(arc => arc.src !== id && arc.dst !== id);
-
-            // 4. Finally, delete the element itself
+            for (let rid in elements) { if (elements[rid].isRef && elements[rid].targetId === id) deleteElementTree(rid); }
+            arcs = arcs.filter(a => a.src !== id && a.dst !== id);
             delete elements[id];
         }
 
-        // Handle Keyboard Deletion (Backspace or Delete key)
         window.addEventListener('keydown', (e) => {
             if ((e.key === 'Backspace' || e.key === 'Delete') && currentTool === 'Select' && selectedElement) {
-                deleteElementTree(selectedElement.id);
-                selectedElement = null;
-                redraw();
+                deleteElementTree(selectedElement.id); selectedElement = null; redraw();
             }
         });
 
-        // --- Hierarchy & Math Helpers ---
-        function getDeepestPageAt(x, y) {
-            let found = null, maxDepth = -1;
+        function getDeepestPageAt(wx, wy) {
+            let found = null, maxD = -1;
             for (let id in elements) {
                 const el = elements[id];
-                if (el.type === 'Page' && x >= el.x && x <= el.x + el.w && y >= el.y && y <= el.y + el.h) {
-                    let depth = getDepth(el);
-                    if (depth > maxDepth) { maxDepth = depth; found = el; }
+                if (el.type === 'Page' && wx >= el.x && wx <= el.x + el.w && wy >= el.y && wy <= el.y + el.h) {
+                    let d = getDepth(el); if (d > maxD) { maxD = d; found = el; }
                 }
             }
             return found;
         }
 
-        function getDepth(el) {
-            let depth = 0; let curr = el;
-            while (curr.parentId && elements[curr.parentId]) { depth++; curr = elements[curr.parentId]; }
-            return depth;
+        function getDepth(el) { let d = 0; let c = el; while (c.parentId && elements[c.parentId]) { d++; c = elements[c.parentId]; } return d; }
+        function getNodeAt(wx, wy) {
+            for (let id in elements) { const n = elements[id]; if (n.type !== 'Page' && Math.abs(n.x - wx) < 22 && Math.abs(n.y - wy) < 22) return n; }
+            return getDeepestPageAt(wx, wy);
         }
 
-        function getNodeAt(x, y) {
-            for (let id in elements) {
-                const n = elements[id];
-                if (n.type !== 'Page') {
-                    if (Math.abs(n.x - x) < 22 && Math.abs(n.y - y) < 22) return n;
-                }
-            }
-            return getDeepestPageAt(x, y);
-        }
-
-        function getCenter(node) {
-            if (node.type === 'Page') return { x: node.x + node.w/2, y: node.y + node.h/2 };
-            return { x: node.x, y: node.y };
-        }
-
-        function getPerimeterPoint(node, targetX, targetY) {
-            const center = getCenter(node);
-            const angle = Math.atan2(targetY - center.y, targetX - center.x);
-            
-            if (node.type.includes('Place')) {
-                const r = 20;
-                return { x: center.x + r * Math.cos(angle), y: center.y + r * Math.sin(angle) };
-            } 
-            else if (node.type.includes('Transition')) {
-                const hw = 15, hh = 20;
-                const absCos = Math.abs(Math.cos(angle)), absSin = Math.abs(Math.sin(angle));
-                const dist = (hw * absSin < hh * absCos) ? (hw / absCos) : (hh / absSin);
-                return { x: center.x + dist * Math.cos(angle), y: center.y + dist * Math.sin(angle) };
-            }
-            else if (node.type === 'Page') {
-                const hw = node.w / 2, hh = node.h / 2;
-                const absCos = Math.abs(Math.cos(angle)), absSin = Math.abs(Math.sin(angle));
-                const dist = (hw * absSin < hh * absCos) ? (hw / absCos) : (hh / absSin);
-                return { x: center.x + dist * Math.cos(angle), y: center.y + dist * Math.sin(angle) };
-            }
-            return center;
+        function getCenter(node) { return node.type === 'Page' ? { x: node.x + node.w/2, y: node.y + node.h/2 } : { x: node.x, y: node.y }; }
+        function getPerimeterPoint(node, tx, ty) {
+            const c = getCenter(node); const a = Math.atan2(ty - c.y, tx - c.x);
+            if (node.type.includes('Place')) return { x: c.x + 20 * Math.cos(a), y: c.y + 20 * Math.sin(a) };
+            const hw = node.type === 'Page' ? node.w/2 : 15, hh = node.type === 'Page' ? node.h/2 : 20;
+            const acos = Math.abs(Math.cos(a)), asin = Math.abs(Math.sin(a));
+            const d = (hw * asin < hh * acos) ? (hw / acos) : (hh / asin);
+            return { x: c.x + d * Math.cos(a), y: c.y + d * Math.sin(a) };
         }
 
         function moveElementTree(el, dx, dy) {
             el.x += dx; el.y += dy;
-            for (let id in elements) {
-                if (elements[id].parentId === el.id) moveElementTree(elements[id], dx, dy);
-            }
+            for (let id in elements) { if (elements[id].parentId === el.id) moveElementTree(elements[id], dx, dy); }
         }
 
-        // --- Interaction Handlers ---
         canvas.addEventListener('dblclick', (e) => {
             if (linkingReference || currentTool === 'Delete') return; 
-            const rect = canvas.getBoundingClientRect();
-            const node = getNodeAt(e.clientX - rect.left, e.clientY - rect.top);
+            const { worldX, worldY } = getMousePos(e);
+            const node = getNodeAt(worldX, worldY);
             if (node) {
                 const newName = prompt("Rename element:", node.name);
-                if (newName !== null && newName.trim() !== "") {
-                    node.name = newName.trim();
-                    redraw();
-                }
+                if (newName !== null && newName.trim() !== "") { node.name = newName.trim(); redraw(); }
             }
         });
 
         canvas.addEventListener('mousedown', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const { screenX, screenY, worldX, worldY } = getMousePos(e);
+            if (e.button === 1) { isPanning = true; panStartX = screenX - offsetX; panStartY = screenY - offsetY; canvas.style.cursor = 'grabbing'; return; }
 
             if (linkingReference) {
-                const node = getNodeAt(x, y);
-                if (node && node.type === linkingReference.type && !node.isRef) {
-                    linkingReference.targetId = node.id;
-                    linkingReference = null;
-                    setTool('Select');
-                } else {
-                    delete elements[linkingReference.id];
-                    linkingReference = null;
-                    setTool('Select');
-                }
-                redraw();
-                return;
+                const node = getNodeAt(worldX, worldY);
+                if (node && node.type === linkingReference.type && !node.isRef) linkingReference.targetId = node.id;
+                else delete elements[linkingReference.id];
+                linkingReference = null; setTool('Select'); redraw(); return;
             }
 
-            // Eraser Tool Trigger
-            if (currentTool === 'Delete') {
-                const node = getNodeAt(x, y);
-                if (node) {
-                    deleteElementTree(node.id);
-                    // Stay in Delete mode for bulk erasing
-                    redraw();
-                }
-                return;
-            }
+            if (currentTool === 'Delete') { const node = getNodeAt(worldX, worldY); if (node) deleteElementTree(node.id); redraw(); return; }
 
             if (currentTool === 'Select') {
+                const node = getNodeAt(worldX, worldY);
+                if (!node) { isPanning = true; panStartX = screenX - offsetX; panStartY = screenY - offsetY; canvas.style.cursor = 'grabbing'; selectedElement = null; redraw(); return; }
                 if (selectedElement && selectedElement.type === 'Page') {
-                    const handleX = selectedElement.x + selectedElement.w;
-                    const handleY = selectedElement.y + selectedElement.h;
-                    if (Math.abs(x - handleX) < 15 && Math.abs(y - handleY) < 15) {
-                        resizingPage = selectedElement; return;
-                    }
+                    const hX = selectedElement.x + selectedElement.w, hY = selectedElement.y + selectedElement.h;
+                    if (Math.abs(worldX - hX) < 15 && Math.abs(worldY - hY) < 15) { resizingPage = selectedElement; return; }
                 }
-                const node = getNodeAt(x, y);
-                selectedElement = node;
-                if (node) {
-                    draggingElement = node;
-                    dragOffsetX = x - node.x; dragOffsetY = y - node.y;
-                }
-                redraw();
+                selectedElement = node; draggingElement = node; dragOffsetX = worldX - node.x; dragOffsetY = worldY - node.y; redraw();
             } 
             else if (['Place', 'Ref Place', 'Transition', 'Ref Transition', 'Page'].includes(currentTool)) {
-                const isRef = currentTool.startsWith('Ref');
-                const baseType = currentTool.replace('Ref ', '');
-                const parent = getDeepestPageAt(x, y);
-                
-                const id = (isRef ? 'R' : '') + baseType[0] + counter++;
-                const newElement = { 
-                    id, name: id, type: baseType, x, y, isRef, tokens: 0, 
-                    parentId: parent ? parent.id : null,
-                    targetId: null, 
-                    w: baseType === 'Page' ? 240 : null,
-                    h: baseType === 'Page' ? 180 : null
-                };
-                
-                elements[id] = newElement;
-
-                if (isRef) {
-                    linkingReference = newElement;
-                    updateHelp(`Select a standard ${baseType} to link this reference to (or click empty space to cancel)`);
-                } else {
-                    setTool('Select');
-                }
+                const isRef = currentTool.startsWith('Ref'), type = currentTool.replace('Ref ', '');
+                const parent = getDeepestPageAt(worldX, worldY);
+                const id = (isRef ? 'R' : '') + type[0] + counter++;
+                elements[id] = { id, name: id, type, x: worldX, y: worldY, isRef, tokens: 0, parentId: parent ? parent.id : null, targetId: null, w: type === 'Page' ? 240 : null, h: type === 'Page' ? 180 : null };
+                if (isRef) linkingReference = elements[id]; else setTool('Select');
                 redraw();
             }
-            else if (currentTool === 'Token') {
-                const node = getNodeAt(x, y);
-                if (node && node.type === 'Place') { 
-                    node.tokens++; 
-                    setTool('Select');
-                }
-            }
+            else if (currentTool === 'Token') { const n = getNodeAt(worldX, worldY); if (n && n.type === 'Place') { n.tokens++; setTool('Select'); } }
             else if (currentTool === 'Arc' || currentTool === 'Inhibitor') {
-                const node = getNodeAt(x, y);
-                if (node) {
-                    if (!selectedForArc) {
-                        selectedForArc = node;
-                        updateHelp(`Select destination node for ${currentTool}`);
-                    } else if (selectedForArc.id !== node.id) {
-                        arcs.push({
-                            src: selectedForArc.id, dst: node.id, 
-                            type: currentTool === 'Inhibitor' ? 'inhibitor' : 'normal'
-                        });
-                        setTool('Select');
-                    }
+                const n = getNodeAt(worldX, worldY);
+                if (n) {
+                    if (!selectedForArc) selectedForArc = n;
+                    else if (selectedForArc.id !== n.id) { arcs.push({ src: selectedForArc.id, dst: n.id, type: currentTool === 'Inhibitor' ? 'inhibitor' : 'normal' }); setTool('Select'); }
                 } else selectedForArc = null;
                 redraw(); 
             }
         });
 
         canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left, y = e.clientY - rect.top;
-            
-            mouseX = x; mouseY = y;
-
-            if (linkingReference) {
-                redraw(); 
-            }
-            else if (resizingPage) {
-                resizingPage.w = Math.max(150, x - resizingPage.x);
-                resizingPage.h = Math.max(100, y - resizingPage.y);
-                redraw();
-            }
+            const { screenX, screenY, worldX, worldY } = getMousePos(e);
+            mouseWorldX = worldX; mouseWorldY = worldY;
+            if (isPanning) { offsetX = screenX - panStartX; offsetY = screenY - panStartY; redraw(); return; }
+            if (linkingReference) redraw();
+            else if (resizingPage) { resizingPage.w = Math.max(150, worldX - resizingPage.x); resizingPage.h = Math.max(100, worldY - resizingPage.y); redraw(); }
             else if (draggingElement) {
-                let newX = x - dragOffsetX;
-                let newY = y - dragOffsetY;
-
+                let nX = worldX - dragOffsetX, nY = worldY - dragOffsetY;
                 if (draggingElement.parentId && elements[draggingElement.parentId]) {
-                    const parent = elements[draggingElement.parentId];
-                    const isPage = draggingElement.type === 'Page';
-                    
-                    const elW = isPage ? draggingElement.w : 0;
-                    const elH = isPage ? draggingElement.h : 0;
-                    const padX = isPage ? 10 : 25;
-                    const padY = isPage ? 10 : 25;
-
-                    const minX = parent.x + padX;
-                    const maxX = parent.x + parent.w - elW - padX;
-                    const minY = parent.y + 40 + padY; 
-                    const maxY = parent.y + parent.h - elH - padY;
-
-                    newX = Math.max(minX, Math.min(newX, maxX));
-                    newY = Math.max(minY, Math.min(newY, maxY));
+                    const p = elements[draggingElement.parentId], isP = draggingElement.type === 'Page';
+                    const ew = isP ? draggingElement.w : 0, eh = isP ? draggingElement.h : 0;
+                    nX = Math.max(p.x + (isP?10:25), Math.min(nX, p.x + p.w - ew - (isP?10:25)));
+                    nY = Math.max(p.y + 40 + (isP?10:25), Math.min(nY, p.y + p.h - eh - (isP?10:25)));
                 }
-
-                const dx = newX - draggingElement.x;
-                const dy = newY - draggingElement.y;
-                moveElementTree(draggingElement, dx, dy);
-                redraw();
+                moveElementTree(draggingElement, nX - draggingElement.x, nY - draggingElement.y); redraw();
             }
         });
 
-        canvas.addEventListener('mouseup', () => { draggingElement = null; resizingPage = null; });
+        canvas.addEventListener('mouseup', () => { draggingElement = null; resizingPage = null; if (isPanning) { isPanning = false; canvas.style.cursor = currentTool === 'Select' ? 'default' : 'crosshair'; } });
 
-        // --- Rendering ---
-        function drawPetriArc(src, dst, type = 'normal') {
-            const srcCenter = getCenter(src);
-            const dstCenter = getCenter(dst);
-            
-            const start = getPerimeterPoint(src, dstCenter.x, dstCenter.y);
-            const end = getPerimeterPoint(dst, srcCenter.x, srcCenter.y);
-            const angle = Math.atan2(end.y - start.y, end.x - start.x);
-            
-            ctx.beginPath(); 
-            ctx.moveTo(start.x, start.y); 
-            ctx.strokeStyle = '#334155'; 
-            ctx.lineWidth = 1.5;
+        // --- Render System ---
+        function drawGrid() {
+            ctx.fillStyle = '#cbd5e1'; 
+            const sX = -offsetX / scale, sY = -offsetY / scale, eX = (width - offsetX) / scale, eY = (height - offsetY) / scale;
+            const fX = Math.floor(sX / 24) * 24, fY = Math.floor(sY / 24) * 24;
+            for (let x = fX; x < eX; x += 24) for (let y = fY; y < eY; y += 24) { ctx.beginPath(); ctx.arc(x, y, 1.5 / scale, 0, Math.PI * 2); ctx.fill(); }
+        }
 
+        function drawArc(src, dst, type) {
+            const st = getPerimeterPoint(src, getCenter(dst).x, getCenter(dst).y), en = getPerimeterPoint(dst, getCenter(src).x, getCenter(src).y);
+            const a = Math.atan2(en.y - st.y, en.x - st.x);
+            ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.strokeStyle = '#334155'; ctx.lineWidth = 1.5;
             if (type === 'inhibitor') {
-                const r = 5;
-                const lineEndX = end.x - 2 * r * Math.cos(angle);
-                const lineEndY = end.y - 2 * r * Math.sin(angle);
-                ctx.lineTo(lineEndX, lineEndY);
-                ctx.stroke();
-
-                const centerX = end.x - r * Math.cos(angle);
-                const centerY = end.y - r * Math.sin(angle);
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
-                ctx.fillStyle = '#ffffff'; 
-                ctx.fill(); ctx.stroke();
+                ctx.lineTo(en.x - 10 * Math.cos(a), en.y - 10 * Math.sin(a)); ctx.stroke();
+                ctx.beginPath(); ctx.arc(en.x - 5 * Math.cos(a), en.y - 5 * Math.sin(a), 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff'; ctx.fill(); ctx.stroke();
             } else {
-                const headlen = 12; 
-                ctx.lineTo(end.x, end.y);
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.moveTo(end.x, end.y);
-                ctx.lineTo(end.x - headlen * Math.cos(angle - Math.PI / 8), end.y - headlen * Math.sin(angle - Math.PI / 8));
-                ctx.lineTo(end.x - headlen * Math.cos(angle + Math.PI / 8), end.y - headlen * Math.sin(angle + Math.PI / 8));
+                ctx.lineTo(en.x, en.y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(en.x, en.y);
+                ctx.lineTo(en.x - 12 * Math.cos(a - Math.PI / 8), en.y - 12 * Math.sin(a - Math.PI / 8));
+                ctx.lineTo(en.x - 12 * Math.cos(a + Math.PI / 8), en.y - 12 * Math.sin(a + Math.PI / 8));
                 ctx.fillStyle = '#334155'; ctx.fill();
             }
         }
 
-        function drawReferenceArc(src, dstX, dstY) {
-            const srcCenter = getCenter(src);
-            const angle = Math.atan2(dstY - srcCenter.y, dstX - srcCenter.x);
-            
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(srcCenter.x, srcCenter.y);
-            ctx.lineTo(dstX, dstY);
-            ctx.strokeStyle = '#94a3b8'; 
-            ctx.lineWidth = 1.5;
-            ctx.setLineDash([5, 5]);
-            ctx.stroke();
-
-            const headlen = 10;
-            ctx.beginPath();
-            ctx.moveTo(dstX - headlen * Math.cos(angle - Math.PI / 6), dstY - headlen * Math.sin(angle - Math.PI / 6));
-            ctx.lineTo(dstX, dstY);
-            ctx.lineTo(dstX - headlen * Math.cos(angle + Math.PI / 6), dstY - headlen * Math.sin(angle + Math.PI / 6));
-            ctx.stroke();
-            ctx.restore();
-        }
-
         function renderElement(n) {
             ctx.save();
-            const isSelected = n.id === (selectedElement && selectedElement.id);
-            const isArcTarget = n.id === (selectedForArc && selectedForArc.id);
-            
-            ctx.strokeStyle = isSelected ? '#4f46e5' : (isArcTarget ? '#10b981' : '#1e293b');
-            ctx.lineWidth = isSelected || isArcTarget ? 2.5 : 1.5;
+            const isSel = n.id === (selectedElement?.id), isTgt = n.id === (selectedForArc?.id);
+            ctx.strokeStyle = isSel ? '#4f46e5' : (isTgt ? '#10b981' : '#1e293b');
+            ctx.lineWidth = isSel || isTgt ? 2.5 : 1.5;
             if (n.isRef) ctx.setLineDash([6, 6]);
 
             if (n.type === 'Page') {
-                ctx.shadowColor = 'rgba(15, 23, 42, 0.08)';
-                ctx.shadowBlur = 24;
-                ctx.shadowOffsetY = 12;
-
-                const grad = ctx.createLinearGradient(n.x, n.y, n.x, n.y + n.h);
-                grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-                grad.addColorStop(1, 'rgba(248, 250, 252, 0.95)');
-                
-                ctx.fillStyle = grad;
-                ctx.beginPath(); ctx.roundRect(n.x, n.y, n.w, n.h, 16); ctx.fill(); 
-                
-                ctx.shadowColor = 'transparent'; 
-                ctx.strokeStyle = isSelected ? '#4f46e5' : 'rgba(203, 213, 225, 0.8)';
-                ctx.stroke();
-
-                ctx.fillStyle = 'rgba(241, 245, 249, 0.7)';
-                ctx.beginPath(); ctx.roundRect(n.x, n.y, n.w, 36, [16, 16, 0, 0]); ctx.fill();
-                
+                ctx.shadowColor = 'rgba(15, 23, 42, 0.08)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 12;
+                const gr = ctx.createLinearGradient(n.x, n.y, n.x, n.y + n.h);
+                gr.addColorStop(0, 'rgba(255, 255, 255, 0.95)'); gr.addColorStop(1, 'rgba(248, 250, 252, 0.95)');
+                ctx.fillStyle = gr; ctx.beginPath(); ctx.roundRect(n.x, n.y, n.w, n.h, 16); ctx.fill(); 
+                ctx.shadowColor = 'transparent'; ctx.strokeStyle = isSel ? '#4f46e5' : 'rgba(203, 213, 225, 0.8)'; ctx.stroke();
+                ctx.fillStyle = 'rgba(241, 245, 249, 0.7)'; ctx.beginPath(); ctx.roundRect(n.x, n.y, n.w, 36, [16, 16, 0, 0]); ctx.fill();
                 ctx.beginPath(); ctx.moveTo(n.x, n.y + 36); ctx.lineTo(n.x + n.w, n.y + 36);
                 ctx.strokeStyle = 'rgba(226, 232, 240, 0.8)'; ctx.lineWidth = 1; ctx.stroke();
-
-                ctx.fillStyle = isSelected ? '#4f46e5' : '#334155'; 
-                ctx.font = '600 13px system-ui';
-                ctx.fillText(n.name, n.x + 16, n.y + 23);
-
-                if (isSelected) {
-                    ctx.fillStyle = '#4f46e5';
-                    ctx.beginPath(); ctx.arc(n.x + n.w - 2, n.y + n.h - 2, 5, 0, Math.PI * 2); ctx.fill();
-                }
-            } 
-            else {
-                ctx.fillStyle = '#ffffff';
-                
+                ctx.fillStyle = isSel ? '#4f46e5' : '#334155'; ctx.font = '600 13px system-ui'; ctx.fillText(n.name, n.x + 16, n.y + 23);
+                if (isSel) { ctx.fillStyle = '#4f46e5'; ctx.beginPath(); ctx.arc(n.x + n.w - 2, n.y + n.h - 2, 5 / scale, 0, Math.PI*2); ctx.fill(); }
+            } else {
+                ctx.fillStyle = '#fff';
                 if (n.type === 'Place') {
-                    ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
-                    if (n.tokens === 1) {
-                        ctx.beginPath(); ctx.arc(n.x, n.y, 6, 0, 2 * Math.PI);
-                        ctx.fillStyle = '#0f172a'; ctx.fill();
-                    } else if (n.tokens > 1) {
-                        ctx.fillStyle = '#0f172a'; ctx.font = '800 16px system-ui';
-                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                        ctx.fillText(n.tokens, n.x, n.y);
-                    }
-                } 
-                else if (n.type === 'Transition') {
-                    ctx.beginPath(); ctx.roundRect(n.x - 15, n.y - 20, 30, 40, 4); ctx.fill(); ctx.stroke();
-                }
-
+                    ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                    if (n.tokens === 1) { ctx.beginPath(); ctx.arc(n.x, n.y, 6, 0, Math.PI*2); ctx.fillStyle = '#0f172a'; ctx.fill(); }
+                    else if (n.tokens > 1) { ctx.fillStyle = '#0f172a'; ctx.font = '800 16px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n.tokens, n.x, n.y); }
+                } else if (n.type === 'Transition') { ctx.beginPath(); ctx.roundRect(n.x - 15, n.y - 20, 30, 40, 4); ctx.fill(); ctx.stroke(); }
                 ctx.restore(); 
-                
-                ctx.fillStyle = isSelected ? '#4f46e5' : '#475569'; 
-                ctx.font = '600 12px system-ui';
-                ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-                ctx.fillText(n.name, n.x, n.y + 26);
+                ctx.fillStyle = isSel ? '#4f46e5' : '#475569'; ctx.font = '600 12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(n.name, n.x, n.y + 26);
             }
             ctx.restore();
         }
 
         function redraw() {
-            ctx.clearRect(0, 0, width, height);
-            
-            const sortedIds = Object.keys(elements).sort((a, b) => getDepth(elements[a]) - getDepth(elements[b]));
-            
-            sortedIds.forEach(id => { if (elements[id].type === 'Page') renderElement(elements[id]); });
-
-            for (let id in elements) {
-                const el = elements[id];
-                if (el.isRef && el.targetId && elements[el.targetId]) {
-                    const target = elements[el.targetId];
-                    const targetCenter = getCenter(target);
-                    drawReferenceArc(el, targetCenter.x, targetCenter.y);
-                }
-            }
-
+            ctx.clearRect(0, 0, width, height); ctx.save(); ctx.translate(offsetX, offsetY); ctx.scale(scale, scale); drawGrid(); 
+            const sIds = Object.keys(elements).sort((a, b) => getDepth(elements[a]) - getDepth(elements[b]));
+            sIds.forEach(id => { if (elements[id].type === 'Page') renderElement(elements[id]); });
+            for (let id in elements) { const e = elements[id]; if (e.isRef && e.targetId && elements[e.targetId]) {
+                const tg = elements[e.targetId], c = getCenter(tg), a = Math.atan2(c.y - e.y, c.x - e.x);
+                ctx.save(); ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(c.x, c.y); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(c.x - 10 * Math.cos(a - Math.PI / 6), c.y - 10 * Math.sin(a - Math.PI / 6)); ctx.lineTo(c.x, c.y); ctx.lineTo(c.x - 10 * Math.cos(a + Math.PI / 6), c.y - 10 * Math.sin(a + Math.PI / 6)); ctx.stroke(); ctx.restore();
+            }}
             if (linkingReference) {
-                drawReferenceArc(linkingReference, mouseX, mouseY);
+                const a = Math.atan2(mouseWorldY - linkingReference.y, mouseWorldX - linkingReference.x);
+                ctx.save(); ctx.beginPath(); ctx.moveTo(linkingReference.x, linkingReference.y); ctx.lineTo(mouseWorldX, mouseWorldY); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.restore();
             }
-
-            arcs.forEach(arc => {
-                const src = elements[arc.src], dst = elements[arc.dst];
-                if (src && dst) drawPetriArc(src, dst, arc.type);
-            });
-
-            sortedIds.forEach(id => { if (elements[id].type !== 'Page') renderElement(elements[id]); });
+            arcs.forEach(arc => { if (elements[arc.src] && elements[arc.dst]) drawArc(elements[arc.src], elements[arc.dst], arc.type); });
+            sIds.forEach(id => { if (elements[id].type !== 'Page') renderElement(elements[id]); });
+            ctx.restore(); 
         }
     </script>
 </body>
