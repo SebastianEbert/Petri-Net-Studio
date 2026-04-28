@@ -98,6 +98,23 @@ http://localhost:5000
 | **Backspace / Delete** | Deletes the currently selected element (includes cascading deletes for Pages). |
 | **Escape** | Cancels an active inline text edit. |
 
+## Live MQTT Integration (DiNeROS Mode)
+
+The DiNeROS configuration features a built-in MQTT WebSocket client, allowing you to remotely update the marking (tokens) of any Place in real-time. This is perfect for connecting the editor to live robotic data streams or external simulators.
+
+* **Default Broker:** `wss://broker.emqx.io:8084/mqtt` (EMQX Public Broker)
+* **Subscription Topic:** `dineros/editor/marking`
+* **Payload Format (JSON):** `{"id": "<Place_ID>", "tokens": <Integer>}`
+
+### 🛠️ Quick Test
+
+1. Open the editor and toggle the **Feed** panel from the top-right layout menu to monitor the connection status and incoming logs.
+2. Ensure you have a Place on your canvas (e.g., `P1`).
+3. Open your terminal and publish a test message using the standard `mosquitto_pub` CLI tool:
+
+```bash
+mosquitto_pub -h broker.emqx.io -p 1883 -t dineros/editor/marking -m '{"id": "P1", "tokens": 5}'
+
 ---
 
 ## PNML Compatibility
