@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DiNeROS Editor</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
             --bg-color: #fafbfc; --dot-color: #cbd5e1; --panel-bg: rgba(255, 255, 255, 0.85);
@@ -50,6 +51,23 @@
         .inline-input { position: absolute; background: var(--bg-color); border: 2px dashed var(--primary); color: var(--text-main); font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 600; outline: none; padding: 2px 6px; border-radius: 6px; z-index: 1000; }
         .inline-input.timing { font-family: monospace; }
         .inline-input.meta { color: #ef4444; border-color: #ef4444; font-family: serif; font-style: italic; }
+
+        /* MQTT Feed Styles */
+        #mqtt-feed {
+            position: absolute; top: 75px; right: 20px; width: 320px; bottom: 100px;
+            display: flex; flex-direction: column; z-index: 100;
+            transform: translateX(0); opacity: 1; pointer-events: auto;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+        #mqtt-feed.hidden { transform: translateX(120%); opacity: 0; pointer-events: none; }
+        .feed-header { padding: 12px 16px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 13px; }
+        #mqtt-status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: var(--danger); margin-left: 8px; box-shadow: 0 0 8px currentColor; }
+        .feed-content { flex-grow: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .feed-entry { background: var(--bg-color); border: 1px solid var(--border-light); border-radius: 8px; padding: 8px 12px; font-family: monospace; font-size: 11px; word-break: break-all; transition: border-color 0.2s; }
+        .feed-entry.success { border-left: 3px solid var(--target); }
+        .feed-entry.error { border-left: 3px solid var(--danger); }
+        .feed-entry.info { border-left: 3px solid var(--primary); }
+        .feed-time { color: var(--text-muted); font-size: 10px; margin-bottom: 4px; display: block; }
     </style>
 </head>
 <body>
@@ -67,7 +85,17 @@
 
         <nav id="layout-menu" class="glass-panel">
             <button class="tool-btn" id="btn-autolayout" style="color: var(--primary);"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg> Auto Layout</button>
+            <div class="divider"></div>
+            <button class="tool-btn" id="btn-toggle-feed"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> Feed</button>
         </nav>
+
+        <div id="mqtt-feed" class="glass-panel hidden">
+            <div class="feed-header">
+                <div>📡 MQTT Feed <span id="mqtt-status"></span></div>
+            </div>
+            <div id="feed-content" class="feed-content">
+                </div>
+        </div>
 
         <button id="theme-toggle" class="glass-panel" title="Toggle Dark Mode">🌙</button>
 
@@ -127,6 +155,65 @@
         let currentTool = 'Select', elements = {}, arcs = [], counter = 1;
         let selectedElement = null, draggingElement = null, resizingPage = null, selectedForArc = null;
         let modelName = "Untitled_Dineros_Net", isDirty = false;
+
+        // MQTT and Feed Setup
+        const mqttFeedUI = document.getElementById('mqtt-feed');
+        const feedContent = document.getElementById('feed-content');
+        const mqttStatus = document.getElementById('mqtt-status');
+        
+        document.getElementById('btn-toggle-feed').addEventListener('click', () => {
+            mqttFeedUI.classList.toggle('hidden');
+            document.getElementById('btn-toggle-feed').classList.toggle('active');
+        });
+
+        function logToFeed(msg, type = 'info') {
+            const el = document.createElement('div');
+            el.className = `feed-entry ${type}`;
+            const time = document.createElement('span');
+            time.className = 'feed-time';
+            time.innerText = new Date().toLocaleTimeString();
+            el.appendChild(time);
+            el.appendChild(document.createTextNode(msg));
+            feedContent.prepend(el);
+        }
+
+        // Connect MQTT over WebSocket
+        const brokerUrl = 'wss://broker.emqx.io:8084/mqtt';
+        const mqttTopic = 'dineros/editor/marking';
+        let mqttClient = null;
+
+        try {
+            mqttClient = mqtt.connect(brokerUrl);
+            mqttClient.on('connect', () => {
+                mqttStatus.style.backgroundColor = 'var(--target)';
+                logToFeed(`Connected to broker: ${brokerUrl}`, 'success');
+                mqttClient.subscribe(mqttTopic, (err) => {
+                    if (!err) logToFeed(`Listening on topic: ${mqttTopic}`, 'info');
+                });
+            });
+
+            mqttClient.on('message', (topic, message) => {
+                try {
+                    const payload = JSON.parse(message.toString());
+                    // Expecting { id: "P1", tokens: 5 }
+                    if (payload.id && typeof payload.tokens === 'number') {
+                        if (elements[payload.id] && elements[payload.id].type === 'Place') {
+                            elements[payload.id].tokens = Math.max(0, payload.tokens);
+                            logToFeed(`Set tokens for ${payload.id} to ${payload.tokens}`, 'success');
+                            markDirty(); redraw();
+                        } else {
+                            logToFeed(`Place ID ${payload.id} not found in model`, 'error');
+                        }
+                    } else {
+                        logToFeed(`Invalid JSON structure received`, 'error');
+                    }
+                } catch (e) { logToFeed(`Failed to parse MQTT message`, 'error'); }
+            });
+
+            mqttClient.on('error', (err) => { mqttStatus.style.backgroundColor = 'var(--danger)'; logToFeed(`MQTT Error: ${err.message}`, 'error'); });
+            mqttClient.on('close', () => { mqttStatus.style.backgroundColor = 'var(--danger)'; });
+        } catch(e) { logToFeed(`Failed to init MQTT Client`, 'error'); }
+
 
         themeToggle.addEventListener('click', () => { document.body.classList.toggle('dark-mode'); themeToggle.innerText = document.body.classList.contains('dark-mode') ? '☀️' : '🌙'; redraw(); });
 
@@ -232,9 +319,7 @@
                     if (e.shiftKey) node.tokens = Math.max(0, (node.tokens || 0) - 1);
                     else node.tokens = (node.tokens || 0) + 1;
                     markDirty(); redraw();
-                } else {
-                    setTool('Select');
-                }
+                } else { setTool('Select'); }
                 return;
             }
 
@@ -547,11 +632,10 @@
                 } 
                 else if (n.type === 'Transition') { 
                     ctx.beginPath(); ctx.rect(n.x - 12, n.y - 20, 24, 40); ctx.fill(); ctx.stroke(); 
-                    if (['timed', 'transitionStart', 'transitionEnd'].includes(n.subType)) { 
+                    if (n.subType === 'timed') { 
                         ctx.beginPath(); ctx.arc(n.x, n.y, 6, 0, Math.PI * 2); ctx.stroke(); 
                         ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.x, n.y - 3); ctx.moveTo(n.x, n.y); ctx.lineTo(n.x + 2, n.y + 2); ctx.stroke(); 
-                    }
-                    if (n.subType === 'transitionStart') {
+                    } else if (n.subType === 'transitionStart') {
                         ctx.fillStyle = cols.textMain; ctx.beginPath(); ctx.moveTo(n.x-4, n.y-14); ctx.lineTo(n.x+6, n.y-8); ctx.lineTo(n.x-4, n.y-2); ctx.fill();
                     } else if (n.subType === 'transitionEnd') {
                         ctx.fillStyle = cols.textMain; ctx.fillRect(n.x-4, n.y-14, 8, 8);
@@ -573,6 +657,7 @@
             const pages = Object.values(elements).filter(e => e.type === 'Page').sort((a, b) => getDepth(a) - getDepth(b));
             pages.forEach(p => renderElement(p, cols));
             
+            // Smart Reference Direction lines
             for (let id in elements) { 
                 const e = elements[id]; 
                 if (e.isRef && e.targetId && elements[e.targetId]) {
@@ -628,6 +713,7 @@
             ctx.restore(); 
         }
 
+        // Automatic Auto-Layout Function for DiNeROS Hierarchy
         function runAutoLayout(parentId = null, startX = 100, startY = 100) {
             const childPages = Object.values(elements).filter(e => e.parentId === parentId && e.type === 'Page');
             const childNodes = Object.values(elements).filter(e => e.parentId === parentId && e.type !== 'Page');
@@ -931,7 +1017,7 @@
                             if (el.subType === 'transitionEnd') tType = 'transitionEndType';
                             out += `          <type>${tType}</type>\n`;
                             let ancNode = getAncestorNodeName(el.id);
-                            if (ancNode && el.subType !== 'timed') out += `          <node>${ancNode}</node>\n`;
+                            if (ancNode) out += `          <node>${ancNode}</node>\n`;
                             if (el.subType === 'timed') out += `          <time start="${el.timeStart}" end="${el.timeEnd}"/>\n`;
                         } else out += `          <type>discreteTransitionType</type>\n`;
                         out += `        </toolspecific>\n`;
