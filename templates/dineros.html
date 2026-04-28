@@ -6,56 +6,26 @@
     <title>DiNeROS Editor</title>
     <style>
         :root {
-            /* Light Theme Variables */
-            --bg-color: #fafbfc;
-            --dot-color: #cbd5e1;
-            --panel-bg: rgba(255, 255, 255, 0.85);
-            --primary: #4f46e5;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-light: rgba(226, 232, 240, 0.8);
-            --danger: #ef4444;
-            --hover-bg: rgba(241, 245, 249, 0.8);
-            --zoom-bg: #ffffff;
-            --zoom-hover: #f1f5f9;
+            --bg-color: #fafbfc; --dot-color: #cbd5e1; --panel-bg: rgba(255, 255, 255, 0.85);
+            --primary: #4f46e5; --text-main: #0f172a; --text-muted: #64748b;
+            --border-light: rgba(226, 232, 240, 0.8); --danger: #ef4444; --hover-bg: rgba(241, 245, 249, 0.8);
+            --zoom-bg: #ffffff; --zoom-hover: #f1f5f9;
         }
 
         body.dark-mode {
-            --bg-color: #0f172a;
-            --dot-color: #334155;
-            --panel-bg: rgba(30, 41, 59, 0.85);
-            --text-main: #ffffff; 
-            --text-muted: #cbd5e1; 
-            --border-light: rgba(71, 85, 105, 0.8);
-            --hover-bg: rgba(51, 65, 85, 0.8);
-            --zoom-bg: #1e293b;
-            --zoom-hover: #334155;
-            --primary: #00bfff; 
+            --bg-color: #0f172a; --dot-color: #334155; --panel-bg: rgba(30, 41, 59, 0.85);
+            --text-main: #ffffff; --text-muted: #cbd5e1; --border-light: rgba(71, 85, 105, 0.8);
+            --hover-bg: rgba(51, 65, 85, 0.8); --zoom-bg: #1e293b; --zoom-hover: #334155; --primary: #00bfff; 
         }
 
-        body { 
-            margin: 0; display: flex; height: 100vh; 
-            font-family: 'Inter', system-ui, sans-serif; 
-            overflow: hidden; background-color: var(--bg-color); color: var(--text-main);
-            user-select: none; transition: background-color 0.3s ease;
-        }
-        
+        body { margin: 0; display: flex; height: 100vh; font-family: 'Inter', system-ui, sans-serif; overflow: hidden; background-color: var(--bg-color); color: var(--text-main); user-select: none; transition: background-color 0.3s ease; }
         #canvas-container { flex-grow: 1; position: relative; background-color: var(--bg-color); transition: background-color 0.3s ease; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: default; }
 
-        .glass-panel {
-            background: var(--panel-bg); backdrop-filter: blur(16px); 
-            border: 1px solid var(--border-light); border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-            transition: background 0.3s ease, border-color 0.3s ease;
-        }
+        .glass-panel { background: var(--panel-bg); backdrop-filter: blur(16px); border: 1px solid var(--border-light); border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); transition: background 0.3s ease, border-color 0.3s ease; }
 
-        #toolbars-container {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; flex-direction: column; gap: 10px; align-items: center; z-index: 100;
-        }
+        #toolbars-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; align-items: center; z-index: 100; }
         .toolbar { display: flex; align-items: center; gap: 4px; padding: 8px; }
-
         #file-menu { position: absolute; top: 20px; left: 20px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; z-index: 100;}
         #layout-menu { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 4px; padding: 8px; z-index: 100;}
         #theme-toggle { position: absolute; bottom: 30px; left: 30px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; border-radius: 12px; padding: 0; color: var(--text-main); z-index: 100;}
@@ -68,13 +38,11 @@
         .zoom-btn { background: transparent; border: none; width: 44px; height: 44px; font-size: 22px; font-weight: 500; color: var(--text-main); cursor: pointer; transition: background 0.2s; }
         .zoom-btn:hover { background: var(--zoom-hover); }
         #zoom-label { font-size: 12px; font-weight: 700; color: var(--text-muted); padding: 8px 0; width: 100%; text-align: center; cursor: pointer; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); }
-        #zoom-label:hover { color: var(--text-main); background: var(--zoom-hover); }
 
         .tool-btn { background: transparent; border: none; padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; }
         .tool-btn:hover { color: var(--text-main); background: var(--hover-bg); }
         .tool-btn.active { background: var(--text-main); color: var(--bg-color); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); }
         .divider { width: 1px; height: 24px; background-color: var(--border-light); margin: 0 6px; }
-
         .tool-btn svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; flex-shrink: 0; }
         
         #toast { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 1000; }
@@ -92,18 +60,12 @@
 
         <nav id="file-menu" class="glass-panel">
             <span id="model-name-display" title="Click to rename model">Untitled_Dineros_Net</span>
-            <button class="tool-btn" id="btn-open">
-                <svg viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"></path></svg> Open
-            </button>
-            <button class="tool-btn" id="btn-save">
-                <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save
-            </button>
+            <button class="tool-btn" id="btn-open"><svg viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"></path></svg> Open</button>
+            <button class="tool-btn" id="btn-save"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save</button>
         </nav>
 
         <nav id="layout-menu" class="glass-panel">
-            <button class="tool-btn" id="btn-autolayout" style="color: var(--primary);">
-                <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg> Auto Layout
-            </button>
+            <button class="tool-btn" id="btn-autolayout" style="color: var(--primary);"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg> Auto Layout</button>
         </nav>
 
         <button id="theme-toggle" class="glass-panel" title="Toggle Dark Mode">🌙</button>
@@ -112,23 +74,19 @@
             <nav id="toolbar-standard" class="glass-panel toolbar">
                 <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); padding-left: 8px;">CORE</span>
                 <div class="divider"></div>
-                <button class="tool-btn active" data-tool="Select">
-                    <svg viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path><path d="M13 13l6 6"></path></svg> Select
-                </button>
+                <button class="tool-btn active" data-tool="Select"><svg viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path><path d="M13 13l6 6"></path></svg> Select</button>
                 <div class="divider"></div>
                 <button class="tool-btn" data-tool="Place"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle></svg> Place</button>
                 <button class="tool-btn" data-tool="Transition"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="2"></rect></svg> Discrete Tx</button>
                 <button class="tool-btn" data-tool="Timed Trans"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><circle cx="12" cy="12" r="4"></circle><polyline points="12 10 12 12 14 12"></polyline></svg> Timed Tx</button>
                 <button class="tool-btn" data-tool="Ref Place"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"></circle></svg> Ref Place</button>
                 <button class="tool-btn" data-tool="Ref Transition"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="2" stroke-dasharray="3 3"></rect></svg> Ref Tx</button>
-                <button class="tool-btn" data-tool="Page"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg> Page</button>
                 <div class="divider"></div>
                 <button class="tool-btn" data-tool="Arc"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg> Arc</button>
                 <button class="tool-btn" data-tool="Inhibitor"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="15" y2="12"></line><circle cx="17" cy="12" r="2"></circle></svg> Inhibitor</button>
                 <button class="tool-btn" data-tool="Token"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"></circle></svg> Token</button>
                 <div class="divider"></div>
                 <button class="tool-btn" data-tool="Delete" style="color: var(--danger);"><svg viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Eraser</button>
-                <button class="tool-btn" data-tool="Clear" style="color: var(--danger);"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg> Clear</button>
             </nav>
 
             <nav id="toolbar-dineros" class="glass-panel toolbar">
@@ -153,37 +111,24 @@
     </div>
 
     <script>
-        const canvas = document.getElementById('editor');
-        const ctx = canvas.getContext('2d');
-        const zoomLabel = document.getElementById('zoom-label');
-        const modelNameDisplay = document.getElementById('model-name-display');
-        const toastUI = document.getElementById('toast');
-        const themeToggle = document.getElementById('theme-toggle');
-        let width, height;
-
-        let scale = 1, offsetX = 0, offsetY = 0, isPanning = false, panStartX = 0, panStartY = 0;
+        const canvas = document.getElementById('editor'); const ctx = canvas.getContext('2d');
+        const zoomLabel = document.getElementById('zoom-label'); const modelNameDisplay = document.getElementById('model-name-display');
+        const toastUI = document.getElementById('toast'); const themeToggle = document.getElementById('theme-toggle');
+        let width, height, scale = 1, offsetX = 0, offsetY = 0, isPanning = false, panStartX = 0, panStartY = 0;
         let currentTool = 'Select', elements = {}, arcs = [], counter = 1;
-        let selectedElement = null, draggingElement = null, resizingPage = null;
-        let dragOffsetX = 0, dragOffsetY = 0, selectedForArc = null;
-        let modelName = "Untitled_Dineros_Net", isDirty = false, fileHandle = null; 
+        let selectedElement = null, draggingElement = null, resizingPage = null, selectedForArc = null;
+        let modelName = "Untitled_Dineros_Net", isDirty = false;
 
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            themeToggle.innerText = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
-            redraw(); 
-        });
+        themeToggle.addEventListener('click', () => { document.body.classList.toggle('dark-mode'); themeToggle.innerText = document.body.classList.contains('dark-mode') ? '☀️' : '🌙'; redraw(); });
 
         function getColors() {
             const isDark = document.body.classList.contains('dark-mode');
             return {
-                grid: isDark ? '#334155' : '#cbd5e1', line: isDark ? '#94a3b8' : '#334155',
-                refLine: isDark ? '#64748b' : '#94a3b8', nodeBg: isDark ? '#1e293b' : '#ffffff', 
-                nodeBorder: isDark ? '#00ff41' : '#1e293b', textMain: isDark ? '#ffffff' : '#0f172a', 
+                grid: isDark ? '#334155' : '#cbd5e1', line: isDark ? '#94a3b8' : '#334155', refLine: isDark ? '#64748b' : '#94a3b8',
+                nodeBg: isDark ? '#1e293b' : '#ffffff', nodeBorder: isDark ? '#00ff41' : '#1e293b', textMain: isDark ? '#ffffff' : '#0f172a', 
                 textMuted: isDark ? '#cbd5e1' : '#475569', selected: isDark ? '#00bfff' : '#4f46e5', target: '#10b981',
-                pageGrad1: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                pageGrad2: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(248, 250, 252, 0.95)',
-                pageTitleBg: isDark ? 'rgba(51, 65, 85, 0.7)' : 'rgba(241, 245, 249, 0.7)',
-                pageBorder: isDark ? '#00ff41' : 'rgba(226, 232, 240, 0.8)',
+                pageGrad1: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)', pageGrad2: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(248, 250, 252, 0.95)',
+                pageTitleBg: isDark ? 'rgba(51, 65, 85, 0.7)' : 'rgba(241, 245, 249, 0.7)', pageBorder: isDark ? '#00ff41' : 'rgba(226, 232, 240, 0.8)',
                 dineros: {
                     Node: { bg: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(248, 250, 252, 0.9)', border: isDark ? '#64748b' : '#94a3b8' },
                     CBGroup: { bg: isDark ? 'rgba(124, 45, 18, 0.6)' : '#ffedd5', border: '#f97316' },
@@ -197,11 +142,7 @@
             };
         }
 
-        function showToast(msg, isErr = false) {
-            toastUI.innerText = msg; toastUI.style.background = isErr ? '#ef4444' : '#10b981';
-            toastUI.classList.add('show'); setTimeout(() => toastUI.classList.remove('show'), 2500);
-        }
-
+        function showToast(msg, isErr = false) { toastUI.innerText = msg; toastUI.style.background = isErr ? '#ef4444' : '#10b981'; toastUI.classList.add('show'); setTimeout(() => toastUI.classList.remove('show'), 2500); }
         function markDirty() { if (!isDirty) { isDirty = true; modelNameDisplay.innerText = modelName + ' *'; modelNameDisplay.classList.add('dirty'); } }
         function markClean() { isDirty = false; modelNameDisplay.innerText = modelName; modelNameDisplay.classList.remove('dirty'); }
         modelNameDisplay.addEventListener('click', () => { const nn = prompt("Name:", modelName); if(nn) { modelName = nn.replace(/\s+/g, '_'); markDirty(); } });
@@ -214,10 +155,8 @@
 
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                let tool = e.target.getAttribute('data-tool');
-                if (!tool) tool = e.target.closest('.tool-btn').getAttribute('data-tool');
+                let tool = e.target.getAttribute('data-tool'); if (!tool) tool = e.target.closest('.tool-btn').getAttribute('data-tool');
                 if (!tool) return;
-                
                 if (tool === 'Clear') { elements = {}; arcs = []; counter = 1; selectedElement = null; setTool('Select'); markDirty(); return; }
                 setTool(tool);
             });
@@ -226,40 +165,18 @@
         function resizeCanvas() { width = canvas.parentElement.clientWidth; height = canvas.parentElement.clientHeight; canvas.width = width; canvas.height = height; redraw(); }
         window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
-        function getMousePos(e) {
-            const rect = canvas.getBoundingClientRect();
-            return { worldX: (e.clientX - rect.left - offsetX) / scale, worldY: (e.clientY - rect.top - offsetY) / scale };
-        }
-
+        function getMousePos(e) { const rect = canvas.getBoundingClientRect(); return { worldX: (e.clientX - rect.left - offsetX) / scale, worldY: (e.clientY - rect.top - offsetY) / scale }; }
         function setZoom(ns) { scale = Math.max(0.2, Math.min(ns, 3)); zoomLabel.innerText = Math.round(scale * 100) + '%'; redraw(); }
         function clearActiveInput() { const activeInput = document.getElementById('inline-editor'); if (activeInput) activeInput.blur(); }
 
-        canvas.addEventListener('wheel', (e) => {
-            e.preventDefault(); clearActiveInput();
-            const { screenX, screenY } = getMousePos(e);
-            setZoom(scale * (e.deltaY > 0 ? 0.9 : 1.1), screenX, screenY);
-        }, { passive: false });
-
+        canvas.addEventListener('wheel', (e) => { e.preventDefault(); clearActiveInput(); setZoom(scale * (e.deltaY > 0 ? 0.9 : 1.1), getMousePos(e).worldX, getMousePos(e).worldY); }, { passive: false });
         document.getElementById('zoom-in').addEventListener('click', () => { clearActiveInput(); setZoom(scale * 1.2); });
         document.getElementById('zoom-out').addEventListener('click', () => { clearActiveInput(); setZoom(scale * 0.8); });
         document.getElementById('zoom-label').addEventListener('click', () => { clearActiveInput(); scale = 1; offsetX = 0; offsetY = 0; setZoom(1); });
 
-        // Accurate Hierarchical Depth & Validation
-        function getDepth(el) { 
-            let d = 0, c = el; 
-            while (c && c.parentId && elements[c.parentId]) { d++; c = elements[c.parentId]; } 
-            return d; 
-        }
-
-        function hasAncestor(nodeId, targetSubType) {
-            let curr = elements[nodeId];
-            while (curr) {
-                if (curr.subType === targetSubType) return true;
-                curr = curr.parentId ? elements[curr.parentId] : null;
-            }
-            return false;
-        }
-
+        function getDepth(el) { let d = 0, c = el; while (c && c.parentId && elements[c.parentId]) { d++; c = elements[c.parentId]; } return d; }
+        function hasAncestor(nodeId, targetSubType) { let curr = elements[nodeId]; while (curr) { if (curr.subType === targetSubType) return true; curr = curr.parentId ? elements[curr.parentId] : null; } return false; }
+        
         function getDeepestPageAt(wx, wy) {
             let found = null, maxD = -1;
             for (let id in elements) {
@@ -270,41 +187,22 @@
             } return found;
         }
 
+        // Prioritize Ports/Nodes over background pages
         function getNodeAt(wx, wy) {
             for (let id in elements) {
                 const n = elements[id];
                 if (n.type !== 'Page' && Math.abs(n.x - wx) < 22 && Math.abs(n.y - wy) < 22) return n;
-            }
-            return getDeepestPageAt(wx, wy);
+            } return getDeepestPageAt(wx, wy);
         }
 
-        function getEditableTarget(wx, wy) {
-            const sortedIds = Object.keys(elements).sort((a, b) => getDepth(elements[b]) - getDepth(elements[a]));
-            for (let id of sortedIds) {
-                const n = elements[id];
-                if (n.type !== 'Page') {
-                    if (Math.abs(n.x - wx) < 22 && Math.abs(n.y - wy) < 22) return { node: n, type: 'name' };
-                    if (Math.abs(n.x - wx) < 50 && wy >= n.y - 40 && wy <= n.y - 10) return { node: n, type: 'name' };
-                    if (n.subType === 'timed' && Math.abs(n.x - wx) < 50 && wy >= n.y + 20 && wy <= n.y + 45) return { node: n, type: 'timing' };
-                } else {
-                    if (wx >= n.x && wx <= n.x + n.w && wy >= n.y && wy <= n.y + 36) return { node: n, type: 'name' };
-                }
-            } return null;
-        }
-
-        // Recursive Clean Deletion
+        // Deep Recursive Delete
         function deleteElementTree(id) {
             if (!elements[id]) return;
-            if (elements[id].type === 'Page') {
-                for (let cid in elements) {
-                    if (elements[cid].parentId === id) deleteElementTree(cid);
-                }
-            }
-            // Sever References safely
+            if (elements[id].type === 'Page') { for (let cid in elements) { if (elements[cid].parentId === id) deleteElementTree(cid); } }
+            // Sever Reference lines safely
             for (let rid in elements) {
                 if (elements[rid].isRef && elements[rid].targetId === id) {
                     elements[rid].isRef = false; elements[rid].targetId = null;
-                    if (elements[rid].type === 'Port') delete elements[rid]; // Clean dead ports
                 }
             }
             arcs = arcs.filter(a => a.src !== id && a.dst !== id);
@@ -327,17 +225,11 @@
                 selectedElement = getNodeAt(worldX, worldY);
                 if (selectedElement) {
                     if (selectedElement.type === 'Page') {
-                        const hX = selectedElement.x + selectedElement.w;
-                        const hY = selectedElement.y + selectedElement.h;
-                        if (Math.abs(worldX - hX) < 15 && Math.abs(worldY - hY) < 15) {
-                            resizingPage = selectedElement; return;
-                        }
+                        const hX = selectedElement.x + selectedElement.w, hY = selectedElement.y + selectedElement.h;
+                        if (Math.abs(worldX - hX) < 15 && Math.abs(worldY - hY) < 15) { resizingPage = selectedElement; return; }
                     }
-                    draggingElement = selectedElement; 
-                    dragOffsetX = worldX - selectedElement.x; 
-                    dragOffsetY = worldY - selectedElement.y; 
-                }
-                else { isPanning = true; panStartX = e.clientX - offsetX; panStartY = e.clientY - offsetY; }
+                    draggingElement = selectedElement; dragOffsetX = worldX - selectedElement.x; dragOffsetY = worldY - selectedElement.y; 
+                } else { isPanning = true; panStartX = e.clientX - offsetX; panStartY = e.clientY - offsetY; }
                 redraw();
             } 
             else if (['Place', 'Transition', 'Timed Trans', 'Ref Place', 'Ref Transition'].includes(currentTool)) {
@@ -346,10 +238,8 @@
                 const baseType = currentTool.includes('Trans') ? 'Transition' : 'Place';
                 const parent = getDeepestPageAt(worldX, worldY);
                 
-                if (parent && ['Topic', 'Service', 'Channel'].includes(parent.subType)) {
-                    showToast(`Cannot place nodes directly inside a Channel!`, true); setTool('Select'); return;
-                }
-
+                if (parent && ['Topic', 'Service', 'Channel'].includes(parent.subType)) { showToast(`Cannot place nodes directly inside a Channel!`, true); setTool('Select'); return; }
+                
                 const id = (isRef ? 'R' : '') + (isTimed ? 'T' : baseType[0]) + counter++;
                 elements[id] = { id, name: id, type: baseType, subType: isTimed ? 'timed' : 'discrete', x: worldX, y: worldY, isRef, tokens: 0, timeStart: isTimed?1:0, timeEnd: isTimed?1:0, parentId: parent ? parent.id : null };
                 markDirty(); setTool('Select');
@@ -364,7 +254,6 @@
                 if (['Timer', 'Sub', 'Server'].includes(subType) && (!parent || !hasAncestor(parent.id, 'CBGroup'))) { showToast(`${subType} must be inside a CB Group!`, true); setTool('Select'); return; }
 
                 const id = subType + counter++;
-                
                 let nx = worldX, ny = worldY, nw = 300, nh = 200;
                 if (parent) {
                     nw = Math.min(nw, parent.w - 20); nh = Math.min(nh, parent.h - 50);
@@ -382,10 +271,8 @@
 
                 // Auto-generate Server-side ports when creating a Service
                 if (subType === 'Service') {
-                    const reqP = 'P' + counter++;
-                    elements[reqP] = { id: reqP, name: 'request', type: 'Port', subType: 'server_req', x: nx + nw - 20, y: ny + 40, parentId: id };
-                    const resP = 'P' + counter++;
-                    elements[resP] = { id: resP, name: 'response', type: 'Port', subType: 'server_res', x: nx + nw - 20, y: ny + nh - 40, parentId: id };
+                    const reqP = 'Port' + counter++; elements[reqP] = { id: reqP, name: 'server_req', type: 'Port', x: nx + nw - 20, y: ny + 40, parentId: id };
+                    const resP = 'Port' + counter++; elements[resP] = { id: resP, name: 'server_res', type: 'Port', x: nx + nw - 20, y: ny + nh - 40, parentId: id };
                 }
 
                 markDirty(); setTool('Select');
@@ -393,67 +280,51 @@
             else if (currentTool === 'Arc' || currentTool === 'Inhibitor') {
                 const n = getNodeAt(worldX, worldY);
                 if (n) {
-                    if (!selectedForArc) {
-                        selectedForArc = n;
-                    } else if (selectedForArc.id !== n.id) {
-                        
-                        let src = selectedForArc, dst = n;
-                        let validConnection = true;
+                    if (!selectedForArc) { selectedForArc = n; } 
+                    else if (selectedForArc.id !== n.id) {
+                        let src = selectedForArc, dst = n, valid = true;
 
                         // Constraint: Root Places cannot connect to channels
-                        if (src.type === 'Place' && !src.parentId && ['Topic', 'Service', 'Port'].includes(dst.subType || dst.type)) {
-                            showToast("Root places cannot connect to channels! Place them inside a Node.", true); validConnection = false;
-                        }
-                        if (dst.type === 'Place' && !dst.parentId && ['Topic', 'Service', 'Port'].includes(src.subType || src.type)) {
-                            showToast("Root places cannot connect to channels! Place them inside a Node.", true); validConnection = false;
-                        }
+                        if (src.type === 'Place' && !src.parentId && ['Topic', 'Service', 'Port'].includes(dst.subType || dst.type)) { showToast("Root places cannot connect to channels!", true); valid = false; }
+                        if (dst.type === 'Place' && !dst.parentId && ['Topic', 'Service', 'Port'].includes(src.subType || src.type)) { showToast("Root places cannot connect to channels!", true); valid = false; }
 
-                        if (validConnection) {
-                            // Smart Auto-Routing Logic
+                        if (valid) {
+                            // Smart Port Creation Routing
                             if (src.type === 'Place' && dst.type === 'Page' && dst.subType === 'Topic') {
                                 let pCount = Object.values(elements).filter(e => e.parentId === dst.id).length;
-                                let pId = 'P' + counter++;
+                                let pId = 'Port' + counter++;
                                 elements[pId] = { id: pId, name: 'publisher', type: 'Port', x: dst.x + 20, y: dst.y + 40 + pCount*30, parentId: dst.id, isRef: true, targetId: src.id };
-                                validConnection = false; 
+                                valid = false; 
                             }
                             else if (src.type === 'Page' && src.subType === 'Topic' && dst.type === 'Place') {
                                 let pCount = Object.values(elements).filter(e => e.parentId === src.id).length;
-                                let pId = 'P' + counter++;
+                                let pId = 'Port' + counter++;
                                 elements[pId] = { id: pId, name: 'subscriber', type: 'Port', x: src.x + src.w - 20, y: src.y + 40 + pCount*30, parentId: src.id, isRef: true, targetId: dst.id };
-                                validConnection = false;
+                                valid = false;
                             }
                             else if (src.type === 'Place' && dst.type === 'Page' && dst.subType === 'Service') {
-                                // Service Smart Routing
+                                // Service Client routing (Auto builds Channel container)
                                 let chCount = Object.values(elements).filter(e => e.parentId === dst.id && e.subType === 'Channel').length;
                                 let chId = 'Channel' + counter++;
                                 elements[chId] = { id: chId, name: 'Client ' + (chCount+1), type: 'Page', subType: 'Channel', x: dst.x + 10, y: dst.y + 40 + (chCount*70), w: dst.w - 50, h: 60, parentId: dst.id };
-                                
-                                let reqP = 'P' + counter++;
-                                elements[reqP] = { id: reqP, name: 'request', type: 'Port', x: elements[chId].x + 20, y: elements[chId].y + 30, parentId: chId, isRef: true, targetId: src.id };
-                                
-                                let resP = 'P' + counter++;
-                                elements[resP] = { id: resP, name: 'response', type: 'Port', x: elements[chId].x + elements[chId].w - 20, y: elements[chId].y + 30, parentId: chId };
-                                validConnection = false;
+                                let reqP = 'Port' + counter++; elements[reqP] = { id: reqP, name: 'request', type: 'Port', x: elements[chId].x + 20, y: elements[chId].y + 30, parentId: chId, isRef: true, targetId: src.id };
+                                let resP = 'Port' + counter++; elements[resP] = { id: resP, name: 'response', type: 'Port', x: elements[chId].x + elements[chId].w - 20, y: elements[chId].y + 30, parentId: chId };
+                                valid = false;
                             }
                             else if (src.type === 'Page' && src.subType === 'Service' && dst.type === 'Place') {
-                                showToast("Draw an arc from a specific Client Channel response port instead!", true); validConnection = false;
+                                showToast("To complete a service request, drag an Arc from the Client Channel's Response Port to your Place.", true); valid = false;
                             }
                             else if (src.type === 'Port' && dst.type === 'Place') {
-                                src.isRef = true; src.targetId = dst.id; if(src.name !== 'request') src.name = 'response';
-                                validConnection = false;
+                                src.isRef = true; src.targetId = dst.id; if(src.name !== 'request') src.name = 'response'; valid = false;
                             }
                             else if (src.type === 'Place' && dst.type === 'Port') {
-                                dst.isRef = true; dst.targetId = src.id; if(dst.name !== 'response') dst.name = 'request';
-                                validConnection = false;
+                                dst.isRef = true; dst.targetId = src.id; if(dst.name !== 'response') dst.name = 'request'; valid = false;
                             }
-                            // Bipartite Graph constraints
                             else if ((src.type === 'Place' && dst.type === 'Place') || (src.type === 'Transition' && dst.type === 'Transition')) {
-                                showToast(`Invalid: Cannot connect ${src.type} to ${dst.type}!`, true); validConnection = false;
+                                showToast(`Invalid: Cannot connect ${src.type} to ${dst.type}!`, true); valid = false;
                             }
 
-                            if (validConnection) {
-                                arcs.push({ src: src.id, dst: dst.id, type: currentTool === 'Inhibitor' ? 'inhibitor' : 'normal' }); 
-                            }
+                            if (valid) arcs.push({ src: src.id, dst: dst.id, type: currentTool === 'Inhibitor' ? 'inhibitor' : 'normal' }); 
                             markDirty(); 
                         }
                         selectedForArc = null; setTool('Select');
@@ -473,96 +344,74 @@
             if (isPanning) { offsetX = e.clientX - panStartX; offsetY = e.clientY - panStartY; redraw(); return; }
             
             if (resizingPage) {
-                let newW = Math.max(150, worldX - resizingPage.x);
-                let newH = Math.max(100, worldY - resizingPage.y);
-
+                let newW = Math.max(150, worldX - resizingPage.x), newH = Math.max(100, worldY - resizingPage.y);
                 if (resizingPage.parentId && elements[resizingPage.parentId]) {
                     const p = elements[resizingPage.parentId];
-                    newW = Math.min(newW, p.x + p.w - resizingPage.x - 10);
-                    newH = Math.min(newH, p.y + p.h - resizingPage.y - 10);
+                    newW = Math.min(newW, p.x + p.w - resizingPage.x - 10); newH = Math.min(newH, p.y + p.h - resizingPage.y - 10);
                 }
-
                 let minW = 150, minH = 100;
                 for (let cid in elements) {
                     if (elements[cid].parentId === resizingPage.id) {
                         const child = elements[cid];
                         const cx = child.type === 'Page' ? child.x + child.w : child.x + 20;
                         const cy = child.type === 'Page' ? child.y + child.h : child.y + 20;
-                        minW = Math.max(minW, cx - resizingPage.x + 10);
-                        minH = Math.max(minH, cy - resizingPage.y + 10);
+                        minW = Math.max(minW, cx - resizingPage.x + 10); minH = Math.max(minH, cy - resizingPage.y + 10);
                     }
                 }
-                
-                resizingPage.w = Math.max(newW, minW);
-                resizingPage.h = Math.max(newH, minH);
+                resizingPage.w = Math.max(newW, minW); resizingPage.h = Math.max(newH, minH);
                 markDirty(); redraw();
             }
             else if (draggingElement) { 
                 let nX = worldX - dragOffsetX, nY = worldY - dragOffsetY;
-                
                 if (draggingElement.parentId && elements[draggingElement.parentId]) {
-                    const p = elements[draggingElement.parentId];
-                    const isP = draggingElement.type === 'Page';
-                    const ew = isP ? draggingElement.w : 0, eh = isP ? draggingElement.h : 0;
-                    
-                    nX = Math.max(p.x + (isP?10:25), Math.min(nX, p.x + p.w - ew - (isP?10:25))); 
-                    nY = Math.max(p.y + 40 + (isP?10:25), Math.min(nY, p.y + p.h - eh - (isP?10:25)));
+                    const p = elements[draggingElement.parentId], isP = draggingElement.type === 'Page', ew = isP ? draggingElement.w : 0, eh = isP ? draggingElement.h : 0;
+                    nX = Math.max(p.x + (isP?10:25), Math.min(nX, p.x + p.w - ew - (isP?10:25))); nY = Math.max(p.y + 40 + (isP?10:25), Math.min(nY, p.y + p.h - eh - (isP?10:25)));
                 }
-                
-                const dx = nX - draggingElement.x;
-                const dy = nY - draggingElement.y;
-                moveElementTree(draggingElement, dx, dy); 
-                markDirty(); redraw();
+                moveElementTree(draggingElement, nX - draggingElement.x, nY - draggingElement.y); markDirty(); redraw();
             }
         });
 
         canvas.addEventListener('mouseup', () => { draggingElement = null; resizingPage = null; isPanning = false; });
 
-        // In-Place Editor
-        canvas.addEventListener('dblclick', (e) => {
-            const { worldX, worldY } = getMousePos(e); 
-            const target = getEditableTarget(worldX, worldY);
-            
-            if (target) { 
-                clearActiveInput();
-                const { node, type: editType } = target;
+        function getEditableTarget(wx, wy) {
+            const sortedIds = Object.keys(elements).sort((a, b) => getDepth(elements[b]) - getDepth(elements[a]));
+            for (let id of sortedIds) {
+                const n = elements[id];
+                if (n.type !== 'Page') {
+                    if (Math.abs(n.x - wx) < 22 && Math.abs(n.y - wy) < 22) return { node: n, type: 'name' };
+                    if (n.subType === 'timed' && Math.abs(n.x - wx) < 50 && wy >= n.y + 20 && wy <= n.y + 45) return { node: n, type: 'timing' };
+                } else {
+                    if (wx >= n.x && wx <= n.x + n.w && wy >= n.y && wy <= n.y + 36) return { node: n, type: 'name' };
+                }
+            } return null;
+        }
 
+        canvas.addEventListener('dblclick', (e) => {
+            const { worldX, worldY } = getMousePos(e); const target = getEditableTarget(worldX, worldY);
+            if (target) { 
+                clearActiveInput(); const { node, type: editType } = target;
                 if (node.type === 'Page' && node.meta && editType === 'name') {
                     const newName = prompt("Rename:", node.name); if (newName) { node.name = newName; markDirty(); }
-                    if (node.subType === 'Node') {
-                        const ex = prompt("Executor (Single/Multi):", node.meta.exec); if(ex) node.meta.exec = ex;
-                        const th = prompt("Threads:", node.meta.threads); if(th) node.meta.threads = parseInt(th);
-                    } else if (node.subType === 'Timer') {
-                        const t = prompt("Timer Period (T):", node.meta.t); if(t) node.meta.t = parseInt(t);
-                    } else if (['Sub', 'Server', 'CBGroup'].includes(node.subType)) {
-                        const p = prompt("Priority:", node.meta.prio); if(p) node.meta.prio = parseInt(p);
-                    }
+                    if (node.subType === 'Node') { const ex = prompt("Executor (Single/Multi):", node.meta.exec); if(ex) node.meta.exec = ex; const th = prompt("Threads:", node.meta.threads); if(th) node.meta.threads = parseInt(th); }
+                    else if (node.subType === 'Timer') { const t = prompt("Timer Period (T):", node.meta.t); if(t) node.meta.t = parseInt(t); }
+                    else if (['Sub', 'Server', 'CBGroup'].includes(node.subType)) { const p = prompt("Priority:", node.meta.prio); if(p) node.meta.prio = parseInt(p); }
                     redraw(); return;
                 }
-
                 let targetWorldY = node.y - 26, textAlign = 'center', inputScreenX = offsetX + node.x * scale;
                 if (node.type === 'Page') { targetWorldY = node.y + 18; inputScreenX = offsetX + (node.x + 16) * scale; textAlign = 'left'; } 
                 else if (editType === 'timing') { targetWorldY = node.y + 24; }
-
                 const input = document.createElement('input'); input.id = 'inline-editor'; input.className = editType === 'timing' ? 'inline-input timing' : 'inline-input'; input.type = 'text';
                 const inputScreenY = offsetY + targetWorldY * scale;
-                
-                input.style.left = `${inputScreenX}px`; input.style.top = `${inputScreenY}px`; input.style.textAlign = textAlign;
-                input.style.transform = node.type === 'Page' ? 'translate(0, -50%)' : 'translate(-50%, -50%)';
+                input.style.left = `${inputScreenX}px`; input.style.top = `${inputScreenY}px`; input.style.textAlign = textAlign; input.style.transform = node.type === 'Page' ? 'translate(0, -50%)' : 'translate(-50%, -50%)';
                 input.style.fontSize = `${(editType === 'timing' ? 14 : 12) * scale}px`; input.style.width = `${Math.max(60, node.name.length * 8) * scale}px`;
                 input.value = editType === 'timing' ? `${node.timeStart}, ${node.timeEnd}` : node.name;
-
                 document.getElementById('canvas-container').appendChild(input); input.focus(); input.select();
-
                 function saveAndClose() {
                     if (!document.getElementById('inline-editor')) return;
                     const val = input.value.trim();
                     if (val !== "") {
-                        if (editType === 'timing') {
-                            const parts = val.split(',').map(s => parseInt(s.trim()));
-                            node.timeStart = isNaN(parts[0]) ? 0 : parts[0]; node.timeEnd = isNaN(parts[1]) ? node.timeStart : parts[1];
-                        } else { node.name = val; }
-                        markDirty(); redraw();
+                        if (editType === 'timing') { const parts = val.split(',').map(s => parseInt(s.trim())); node.timeStart = isNaN(parts[0]) ? 0 : parts[0]; node.timeEnd = isNaN(parts[1]) ? node.timeStart : parts[1]; }
+                        else { node.name = val; } markDirty(); redraw();
                     }
                     input.remove();
                 }
@@ -570,8 +419,8 @@
             }
         });
 
+        // Edge trigonometry
         function getCenter(node) { return node.type === 'Page' ? { x: node.x + node.w/2, y: node.y + node.h/2 } : { x: node.x, y: node.y }; }
-        
         function getPerimeterPoint(node, tx, ty) {
             const c = getCenter(node); const a = Math.atan2(ty - c.y, tx - c.x);
             if (node.type === 'Place' || node.type === 'Port') return { x: c.x + 20 * Math.cos(a), y: c.y + 20 * Math.sin(a) };
@@ -588,11 +437,7 @@
         }
 
         function renderElement(n, cols) {
-            ctx.save();
-            const isSel = n.id === (selectedElement?.id);
-            const isTgt = n.id === (selectedForArc?.id);
-            ctx.lineWidth = isSel || isTgt ? 2.5 : 1.5;
-
+            ctx.save(); const isSel = n.id === (selectedElement?.id); const isTgt = n.id === (selectedForArc?.id); ctx.lineWidth = isSel || isTgt ? 2.5 : 1.5;
             if (n.type === 'Page') {
                 const theme = cols.dineros[n.subType] || {bg: cols.pageGrad1, border: cols.pageBorder};
                 ctx.fillStyle = theme.bg; ctx.strokeStyle = isSel ? cols.selected : theme.border;
@@ -601,66 +446,40 @@
                 else ctx.roundRect(n.x, n.y, n.w, n.h, 8); 
                 ctx.fill(); ctx.stroke();
                 
-                // Title
                 ctx.fillStyle = cols.textMain; ctx.font = ['Topic', 'Service', 'Channel'].includes(n.subType) ? 'italic 14px system-ui' : 'italic 16px serif';
                 ctx.textAlign = ['Topic', 'Service', 'Channel'].includes(n.subType) ? 'center' : 'left';
-                if (['Topic', 'Service'].includes(n.subType)) {
-                    ctx.fillText(`«${n.subType.toLowerCase()}»`, n.x + n.w/2, n.y + 30);
-                    ctx.fillText(`\\${n.name}`, n.x + n.w/2, n.y + 60);
-                } else if (n.subType === 'Channel') {
-                    ctx.fillText(`«channel»`, n.x + n.w/2, n.y + 30);
-                    ctx.fillText(n.name, n.x + n.w/2, n.y + 50);
-                } else {
-                    ctx.fillText(n.name, n.x + 12, n.y + 24);
-                }
+                if (['Topic', 'Service'].includes(n.subType)) { ctx.fillText(`«${n.subType.toLowerCase()}»`, n.x + n.w/2, n.y + 30); ctx.fillText(`\\${n.name}`, n.x + n.w/2, n.y + 60); } 
+                else if (n.subType === 'Channel') { ctx.fillText(`«client»`, n.x + n.w/2, n.y + 30); ctx.fillText(n.name, n.x + n.w/2, n.y + 50); } 
+                else { ctx.fillText(n.name, n.x + 12, n.y + 24); }
 
-                // DiNeROS Metadata Tags
                 if (n.meta && !['Topic', 'Service', 'Channel'].includes(n.subType)) {
-                    ctx.font = 'italic 12px serif'; ctx.textAlign = 'right';
-                    let tagX = n.x + n.w - 10;
+                    ctx.font = 'italic 12px serif'; ctx.textAlign = 'right'; let tagX = n.x + n.w - 10;
                     const drawTag = (text) => {
                         const tw = ctx.measureText(text).width + 16;
                         ctx.fillStyle = 'rgba(254, 226, 226, 0.8)'; ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]);
                         ctx.beginPath(); ctx.roundRect(tagX - tw, n.y + 8, tw, 20, 4); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
-                        ctx.fillStyle = '#7f1d1d'; ctx.fillText(text, tagX - 8, n.y + 22);
-                        tagX -= (tw + 8);
+                        ctx.fillStyle = '#7f1d1d'; ctx.fillText(text, tagX - 8, n.y + 22); tagX -= (tw + 8);
                     };
-                    if (n.meta.prio) drawTag(`Priority: ${n.meta.prio}`);
-                    if (n.meta.t) drawTag(`T: ${n.meta.t}`);
-                    if (n.meta.threads) drawTag(`Threads: ${n.meta.threads}`);
-                    if (n.meta.exec) drawTag(`Executor: ${n.meta.exec}`);
+                    if (n.meta.prio) drawTag(`Priority: ${n.meta.prio}`); if (n.meta.t) drawTag(`T: ${n.meta.t}`);
+                    if (n.meta.threads) drawTag(`Threads: ${n.meta.threads}`); if (n.meta.exec) drawTag(`Executor: ${n.meta.exec}`);
                     if (n.meta.cbType) drawTag(`Type: ${n.meta.cbType}`);
                 }
-
-                // Resize handle for Pages
-                if (isSel) {
-                    ctx.fillStyle = cols.selected;
-                    ctx.beginPath(); ctx.arc(n.x + n.w - 2, n.y + n.h - 2, 6 / scale, 0, Math.PI * 2); ctx.fill();
-                }
+                if (isSel) { ctx.fillStyle = cols.selected; ctx.beginPath(); ctx.arc(n.x + n.w - 2, n.y + n.h - 2, 6 / scale, 0, Math.PI * 2); ctx.fill(); }
 
             } else {
                 ctx.fillStyle = cols.nodeBg; ctx.strokeStyle = isSel ? cols.selected : (isTgt ? cols.target : cols.nodeBorder);
                 if (n.isRef) ctx.setLineDash([6, 6]);
 
-                if (n.type === 'Place') {
-                    ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-                } else if (n.type === 'Transition') { 
+                if (n.type === 'Place') { ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, Math.PI*2); ctx.fill(); ctx.stroke(); } 
+                else if (n.type === 'Transition') { 
                     ctx.beginPath(); ctx.rect(n.x - 12, n.y - 20, 24, 40); ctx.fill(); ctx.stroke(); 
-                    if (n.subType === 'timed') {
-                        ctx.beginPath(); ctx.arc(n.x, n.y, 6, 0, Math.PI * 2); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.x, n.y - 3); ctx.moveTo(n.x, n.y); ctx.lineTo(n.x + 2, n.y + 2); ctx.stroke();
-                    }
+                    if (n.subType === 'timed') { ctx.beginPath(); ctx.arc(n.x, n.y, 6, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.x, n.y - 3); ctx.moveTo(n.x, n.y); ctx.lineTo(n.x + 2, n.y + 2); ctx.stroke(); }
                 } else if (n.type === 'Port') {
                     ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(n.x, n.y, 16, 0, Math.PI*2); ctx.fillStyle = cols.bg; ctx.fill(); ctx.stroke();
                 }
-                
-                ctx.setLineDash([]);
-                ctx.fillStyle = isSel ? cols.selected : cols.textMain; ctx.font = '12px system-ui'; ctx.textAlign = 'center'; 
+                ctx.setLineDash([]); ctx.fillStyle = isSel ? cols.selected : cols.textMain; ctx.font = '12px system-ui'; ctx.textAlign = 'center'; 
                 ctx.fillText(n.name, n.x, n.y - 28);
-
-                if (n.subType === 'timed') {
-                    ctx.font = '600 12px monospace'; ctx.fillText(`[${n.timeStart}, ${n.timeEnd}]`, n.x, n.y + 35);
-                }
+                if (n.subType === 'timed') { ctx.font = '600 12px monospace'; ctx.fillText(`[${n.timeStart}, ${n.timeEnd}]`, n.x, n.y + 35); }
             }
             ctx.restore();
         }
@@ -669,24 +488,27 @@
             const cols = getColors();
             ctx.clearRect(0, 0, width, height); ctx.save(); ctx.translate(offsetX, offsetY); ctx.scale(scale, scale); drawGrid(cols); 
             
-            // 1. Pages
             const pages = Object.values(elements).filter(e => e.type === 'Page').sort((a, b) => getDepth(a) - getDepth(b));
             pages.forEach(p => renderElement(p, cols));
             
-            // 2. Reference Lines (Ports to Places)
+            // Draw Reference Lines based on Direction logic
             for (let id in elements) { 
                 const e = elements[id]; 
                 if (e.isRef && e.targetId && elements[e.targetId]) {
                     const tg = elements[e.targetId];
-                    let s = e, d = tg; 
-                    if (e.name === 'publisher' || e.name === 'request') { s = tg; d = e; }
+                    let source = e, dest = tg;
                     
-                    const st = getPerimeterPoint(s, getCenter(d).x, getCenter(d).y);
-                    const en = getPerimeterPoint(d, getCenter(s).x, getCenter(s).y);
+                    // Strict Flow Direction Rules for Ports
+                    if (['publisher', 'request', 'server_res'].includes(e.name)) { source = tg; dest = e; }
+                    else if (['subscriber', 'response', 'server_req'].includes(e.name)) { source = e; dest = tg; }
+
+                    const st = getPerimeterPoint(source, getCenter(dest).x, getCenter(dest).y);
+                    const en = getPerimeterPoint(dest, getCenter(source).x, getCenter(source).y);
                     const a = Math.atan2(en.y - st.y, en.x - st.x);
                     
                     ctx.save(); ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.lineTo(en.x, en.y); 
                     ctx.strokeStyle = cols.refLine; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke(); 
+                    
                     ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(en.x, en.y);
                     ctx.lineTo(en.x - 12 * Math.cos(a - Math.PI / 8), en.y - 12 * Math.sin(a - Math.PI / 8));
                     ctx.lineTo(en.x - 12 * Math.cos(a + Math.PI / 8), en.y - 12 * Math.sin(a + Math.PI / 8));
@@ -694,35 +516,39 @@
                 }
             }
 
-            // 3. Arcs
             arcs.forEach(arc => { 
                 const s = elements[arc.src], d = elements[arc.dst];
                 if(s && d) {
-                    const st = getPerimeterPoint(s, getCenter(d).x, getCenter(d).y);
-                    const en = getPerimeterPoint(d, getCenter(s).x, getCenter(s).y);
-                    const a = Math.atan2(en.y - st.y, en.x - st.x);
-
-                    ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.lineTo(en.x, en.y); ctx.strokeStyle = cols.line; ctx.lineWidth = 1.5; ctx.stroke();
+                    let st = getCenter(s), en = getCenter(d);
                     
-                    if (arc.type === 'inhibitor') {
-                        ctx.beginPath(); ctx.arc(en.x - 5*Math.cos(a), en.y - 5*Math.sin(a), 5, 0, Math.PI*2); ctx.fillStyle = cols.nodeBg; ctx.fill(); ctx.stroke();
+                    if (d.type !== 'Page') {
+                        st = getPerimeterPoint(s, getCenter(d).x, getCenter(d).y);
+                        en = getPerimeterPoint(d, getCenter(s).x, getCenter(s).y);
+                        const a = Math.atan2(en.y - st.y, en.x - st.x);
+
+                        ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.lineTo(en.x, en.y);
+                        ctx.strokeStyle = cols.line; ctx.lineWidth = 1.5; ctx.stroke();
+                        
+                        if (arc.type === 'inhibitor') {
+                            ctx.beginPath(); ctx.arc(en.x - 5*Math.cos(a), en.y - 5*Math.sin(a), 5, 0, Math.PI*2); ctx.fillStyle = cols.nodeBg; ctx.fill(); ctx.stroke();
+                        } else {
+                            ctx.beginPath(); ctx.moveTo(en.x, en.y);
+                            ctx.lineTo(en.x - 12 * Math.cos(a - Math.PI / 8), en.y - 12 * Math.sin(a - Math.PI / 8));
+                            ctx.lineTo(en.x - 12 * Math.cos(a + Math.PI / 8), en.y - 12 * Math.sin(a + Math.PI / 8));
+                            ctx.fillStyle = cols.line; ctx.fill();
+                        }
                     } else {
-                        ctx.beginPath(); ctx.moveTo(en.x, en.y);
-                        ctx.lineTo(en.x - 12 * Math.cos(a - Math.PI / 8), en.y - 12 * Math.sin(a - Math.PI / 8));
-                        ctx.lineTo(en.x - 12 * Math.cos(a + Math.PI / 8), en.y - 12 * Math.sin(a + Math.PI / 8));
-                        ctx.fillStyle = cols.line; ctx.fill();
+                        ctx.beginPath(); ctx.moveTo(st.x, st.y); ctx.lineTo(en.x, en.y);
+                        ctx.strokeStyle = cols.line; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
                     }
                 }
             });
 
-            // 4. Nodes
             const nodes = Object.values(elements).filter(e => e.type !== 'Page').sort((a, b) => getDepth(a) - getDepth(b));
             nodes.forEach(n => renderElement(n, cols));
-            
             ctx.restore(); 
         }
 
-        // Layout logic
         document.getElementById('btn-autolayout').addEventListener('click', () => {
             let startY = 100;
             const rootPages = Object.values(elements).filter(e => e.type === 'Page' && !e.parentId);
@@ -730,55 +556,248 @@
             scale = 1; offsetX = 0; offsetY = 0; markDirty(); redraw(); showToast("Basic layout applied.");
         });
 
-        // XML Generator
+        // -------------------------------------------------------------
+        // XSD Accurate DiNeROS XML Parser & Generator
+        // -------------------------------------------------------------
+        
+        document.getElementById('btn-open').addEventListener('click', () => { document.getElementById('file-input').click(); });
+        document.getElementById('file-input').addEventListener('change', (e) => { if (e.target.files.length > 0) { fileHandle = null; importPNML(e.target.files[0]); e.target.value = ''; } });
+
+        function getChildTag(node, tagName) { for(let i=0; i<node.children.length; i++) { if(node.children[i].tagName.toLowerCase() === tagName.toLowerCase()) return node.children[i]; } return null; }
+
+        function importPNML(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const parser = new DOMParser(); const doc = parser.parseFromString(e.target.result, "application/xml");
+                elements = {}; arcs = []; counter = 1; selectedElement = null;
+                let hasPageGraphics = false;
+
+                const net = doc.querySelector('net');
+                if (net) {
+                    let nameNode = getChildTag(net, 'name');
+                    if (nameNode) { let textNode = getChildTag(nameNode, 'text'); if (textNode) modelName = textNode.textContent; } 
+                    else { modelName = net.getAttribute('id') || "Imported_Net"; }
+
+                    const cbGroups = {};
+                    const tspec = getChildTag(net, 'toolspecific');
+                    if (tspec) {
+                        const cbgs = getChildTag(tspec, 'callbackgroups');
+                        if (cbgs) {
+                            for(let i=0; i<cbgs.children.length; i++) {
+                                let g = cbgs.children[i]; let gid = getChildTag(g, 'id')?.textContent;
+                                let gx = 100, gy = 100, gw = 300, gh = 200, pNode = getChildTag(g, 'node')?.textContent || null;
+                                let graphicsNode = getChildTag(g, 'graphics');
+                                if (graphicsNode) {
+                                    let posNode = getChildTag(graphicsNode, 'position'); if (posNode) { gx = parseFloat(posNode.getAttribute('x'))||gx; gy = parseFloat(posNode.getAttribute('y'))||gy; }
+                                    let dimNode = getChildTag(graphicsNode, 'dimension'); if (dimNode) { gw = parseFloat(dimNode.getAttribute('x'))||gw; gh = parseFloat(dimNode.getAttribute('y'))||gh; hasPageGraphics = true; }
+                                }
+                                
+                                cbGroups[gid] = { type: getChildTag(g, 'type')?.textContent || 'exclusive', prio: parseInt(getChildTag(g, 'priority')?.textContent || '1') };
+                                let internalId = 'CBGroup_' + gid;
+                                elements[internalId] = { id: internalId, name: gid, type: 'Page', subType: 'CBGroup', x: gx, y: gy, w: gw, h: gh, parentId: pNode, meta: { cbType: cbGroups[gid].type, prio: cbGroups[gid].prio } };
+                            }
+                        }
+                    }
+
+                    function parseXMLNode(node, parentId) {
+                        for (let i = 0; i < node.children.length; i++) {
+                            let child = node.children[i], tag = child.tagName.toLowerCase(), id = child.getAttribute('id');
+                            if (!id) continue;
+
+                            let name = id, nameNode = getChildTag(child, 'name');
+                            if (nameNode) { let textNode = getChildTag(nameNode, 'text'); if (textNode) name = textNode.textContent; }
+                            
+                            let x = 100, y = 100, w = 300, h = 200;
+                            let graphicsNode = getChildTag(child, 'graphics');
+                            if (graphicsNode) {
+                                let posNode = getChildTag(graphicsNode, 'position'); if (posNode) { x = parseFloat(posNode.getAttribute('x'))||x; y = parseFloat(posNode.getAttribute('y'))||y; }
+                                let dimNode = getChildTag(graphicsNode, 'dimension'); if (dimNode) { w = parseFloat(dimNode.getAttribute('x'))||w; h = parseFloat(dimNode.getAttribute('y'))||h; if (tag === 'nodepage' || tag === 'page') hasPageGraphics = true;}
+                            }
+
+                            if (tag === 'nodepage' || tag === 'page') {
+                                let subType = 'Standard', meta = null;
+                                let tsn = getChildTag(child, 'toolspecific');
+                                if (tsn) {
+                                    let t = getChildTag(tsn, 'type')?.textContent;
+                                    if (t === 'nodePage' || tag === 'nodepage') { subType = 'Node'; meta = { exec: getChildTag(tsn, 'executor')?.textContent || 'multi', threads: parseInt(getChildTag(tsn, 'threads')?.textContent || '1') }; } 
+                                    else if (t === 'callbackTimer') { subType = 'Timer'; meta = { t: parseInt(getChildTag(tsn, 'timer')?.textContent || '5'), prio: parseInt(getChildTag(tsn, 'priority')?.textContent || '1') }; } 
+                                    else if (t === 'callbackSubscriber') { subType = 'Sub'; meta = { prio: parseInt(getChildTag(tsn, 'priority')?.textContent || '1') }; } 
+                                    else if (t === 'callbackServer') { subType = 'Server'; meta = { prio: parseInt(getChildTag(tsn, 'priority')?.textContent || '1') }; }
+
+                                    let gName = getChildTag(tsn, 'group')?.textContent;
+                                    if (gName && cbGroups[gName]) { parentId = 'CBGroup_' + gName; }
+                                }
+                                elements[id] = { id, name, type: 'Page', subType, x, y, w, h, parentId, meta };
+                                parseXMLNode(child, id);
+                            } else if (tag === 'place' || tag === 'referenceplace') {
+                                let isRef = tag === 'referenceplace'; elements[id] = { id, name, type: 'Place', subType: 'discrete', x, y, parentId, isRef, targetId: child.getAttribute('ref') };
+                            } else if (tag === 'transition') {
+                                let tsn = getChildTag(child, 'toolspecific'); let tType = tsn ? getChildTag(tsn, 'type')?.textContent : null;
+
+                                if (tType === 'topicTransitionType') {
+                                    elements[id] = { id, name: getChildTag(tsn, 'topicName')?.textContent || name, type: 'Page', subType: 'Topic', x, y, w, h, parentId };
+                                    let pubs = getChildTag(tsn, 'publishers');
+                                    if (pubs) {
+                                        Array.from(pubs.children).forEach((pub, idx) => {
+                                            let pubId = getChildTag(pub, 'id')?.textContent;
+                                            if (pubId) { let pPort = 'Port_pub_' + id + '_' + idx; elements[pPort] = { id: pPort, name: 'publisher', type: 'Port', x: x + 20, y: y + 40 + idx*30, parentId: id, isRef: true, targetId: pubId }; }
+                                        });
+                                    }
+                                    let subs = getChildTag(tsn, 'subscribers');
+                                    if (subs) {
+                                        Array.from(subs.children).forEach((sub, idx) => {
+                                            let subId = getChildTag(sub, 'id')?.textContent;
+                                            if (subId) { let sPort = 'Port_sub_' + id + '_' + idx; elements[sPort] = { id: sPort, name: 'subscriber', type: 'Port', x: x + w - 20, y: y + 40 + idx*30, parentId: id, isRef: true, targetId: subId }; }
+                                        });
+                                    }
+                                } else if (tType === 'serviceTransitionType') {
+                                    elements[id] = { id, name: getChildTag(tsn, 'serviceName')?.textContent || name, type: 'Page', subType: 'Service', x, y, w, h, parentId };
+                                    let sIn = getChildTag(tsn, 'serverInput')?.textContent; let sOut = getChildTag(tsn, 'serverOutput')?.textContent;
+                                    let reqP = 'Port_req_' + id; elements[reqP] = { id: reqP, name: 'server_req', type: 'Port', x: x + w - 20, y: y + 40, parentId: id, isRef: true, targetId: sIn };
+                                    let resP = 'Port_res_' + id; elements[resP] = { id: resP, name: 'server_res', type: 'Port', x: x + w - 20, y: y + h - 40, parentId: id, isRef: true, targetId: sOut };
+                                    
+                                    let channels = getChildTag(tsn, 'channels');
+                                    if (channels) {
+                                        Array.from(channels.children).forEach((ch, idx) => {
+                                            let cid = getChildTag(ch, 'cid')?.textContent || ('ch' + idx); let creq = getChildTag(ch, 'request')?.textContent; let cres = getChildTag(ch, 'response')?.textContent;
+                                            elements[cid] = { id: cid, name: 'Client ' + (idx+1), type: 'Page', subType: 'Channel', x: x + 10, y: y + 40 + (idx*70), w: w - 50, h: 60, parentId: id };
+                                            let chReqP = 'Port_creq_' + cid; elements[chReqP] = { id: chReqP, name: 'request', type: 'Port', x: elements[cid].x + 20, y: elements[cid].y + 30, parentId: cid, isRef: true, targetId: creq };
+                                            let chResP = 'Port_cres_' + cid; elements[chResP] = { id: chResP, name: 'response', type: 'Port', x: elements[cid].x + elements[cid].w - 20, y: elements[cid].y + 30, parentId: cid, isRef: true, targetId: cres };
+                                        });
+                                    }
+                                } else {
+                                    let isTimed = tType === 'timeTransitionType'; let tStart = 0, tEnd = 0;
+                                    if (isTimed) { let timeNode = getChildTag(tsn, 'time'); if (timeNode) { tStart = parseInt(timeNode.getAttribute('start'))||0; tEnd = parseInt(timeNode.getAttribute('end'))||0; } }
+                                    elements[id] = { id, name, type: 'Transition', subType: isTimed?'timed':'discrete', x, y, parentId, isRef: false, timeStart: tStart, timeEnd: tEnd };
+                                }
+                            } else if (tag === 'arc') {
+                                let src = child.getAttribute('source'), dst = child.getAttribute('target'), aType = 'normal';
+                                let tsn = getChildTag(child, 'toolspecific'); if (tsn && tsn.getAttribute('type') === 'inhibitor') aType = 'inhibitor';
+                                arcs.push({src, dst, type: aType});
+                            }
+                        }
+                    }
+                    const rootPage = getChildTag(net, 'page'); if (rootPage) parseXMLNode(rootPage, null);
+                }
+
+                let maxNum = 0; for (let id in elements) { let num = parseInt(id.replace(/\D/g, '')); if (!isNaN(num) && num > maxNum) maxNum = num; }
+                counter = maxNum + 1; scale = 1; offsetX = 0; offsetY = 0; setZoom(1); markClean(); redraw();
+                
+                if (!hasPageGraphics) runAutoLayout(); redraw();
+            }; 
+            reader.readAsText(file);
+        }
+
         function generatePNMLString() {
             let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">\n';
             xml += `  <net id="${modelName}" type="http://www.pnml.org/version-2009/grammar/ptnet">\n`;
+            xml += `    <name><text>${modelName}</text></name>\n`;
+            
+            const cbgroups = Object.values(elements).filter(e => e.subType === 'CBGroup');
+            if (cbgroups.length > 0) {
+                xml += `    <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">\n      <callbackgroups>\n`;
+                cbgroups.forEach(cb => { 
+                    xml += `        <group>\n          <id>${cb.name}</id>\n          <type>${cb.meta.cbType.toLowerCase()}</type>\n          <priority>${cb.meta.prio}</priority>\n`;
+                    xml += `          <graphics><position x="${cb.x}" y="${cb.y}"/><dimension x="${cb.w}" y="${cb.h}"/></graphics>\n`;
+                    if (cb.parentId) xml += `          <node>${cb.parentId}</node>\n`;
+                    xml += `        </group>\n`; 
+                });
+                xml += `      </callbackgroups>\n    </toolspecific>\n`;
+            }
+            
             xml += `    <page id="root">\n`;
             
             function serializeNode(id) {
                 const el = elements[id]; let out = '';
                 if (el.type === 'Page') {
-                    const tMap = { 'Node': 'nodePage', 'CBGroup': 'callbackPage', 'Timer': 'page', 'Sub': 'page', 'Server': 'page', 'Topic': 'page', 'Service': 'page', 'Channel': 'page' };
+                    if (['Topic', 'Service', 'CBGroup'].includes(el.subType)) return out; 
+                    const tMap = { 'Node': 'nodePage', 'Timer': 'callbackTimer', 'Sub': 'callbackSubscriber', 'Server': 'callbackServer' };
                     const tag = tMap[el.subType] || 'page';
                     
-                    out += `      <${tag} id="${el.id}">\n        <name><text>${el.name}</text></name>\n`;
-                    if (el.meta) {
-                        out += `        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">\n`;
-                        if(el.meta.exec) out += `          <executor>${el.meta.exec.toLowerCase()}</executor>\n`;
-                        if(el.meta.threads) out += `          <threads>${el.meta.threads}</threads>\n`;
-                        out += `        </toolspecific>\n`;
+                    if (tag === 'nodePage') {
+                        out += `      <nodePage id="${el.id}">\n        <name><text>${el.name}</text></name>\n`;
+                        out += `        <graphics><position x="${el.x}" y="${el.y}"/><dimension x="${el.w}" y="${el.h}"/></graphics>\n`;
+                        out += `        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">\n          <type>nodePage</type>\n          <executor>${el.meta.exec.toLowerCase()}</executor>\n          <threads>${el.meta.threads}</threads>\n        </toolspecific>\n`;
+                        for (let cid in elements) { 
+                            if (elements[cid].parentId === el.id && elements[cid].subType !== 'CBGroup') out += serializeNode(cid); 
+                            else if (elements[cid].parentId === el.id && elements[cid].subType === 'CBGroup') {
+                                for (let sid in elements) { if (elements[sid].parentId === elements[cid].id) out += serializeNode(sid); }
+                            }
+                        }
+                        out += `      </nodePage>\n`;
+                    } else if (['callbackTimer', 'callbackSubscriber', 'callbackServer'].includes(tag)) {
+                        out += `      <page id="${el.id}">\n        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">\n          <type>${tag}</type>\n`;
+                        const cbParent = elements[el.parentId]; if (cbParent) out += `          <group>${cbParent.name}</group>\n`;
+                        if (el.meta.t) out += `          <timer>${el.meta.t}</timer>\n`;
+                        out += `          <priority>${el.meta.prio}</priority>\n        </toolspecific>\n`;
+                        out += `        <name><text>${el.name}</text></name>\n`;
+                        out += `        <graphics><position x="${el.x}" y="${el.y}"/><dimension x="${el.w}" y="${el.h}"/></graphics>\n`;
+                        for (let cid in elements) { if (elements[cid].parentId === el.id) out += serializeNode(cid); }
+                        out += `      </page>\n`;
+                    } else {
+                        out += `      <page id="${el.id}">\n        <name><text>${el.name}</text></name>\n`;
+                        out += `        <graphics><position x="${el.x}" y="${el.y}"/><dimension x="${el.w}" y="${el.h}"/></graphics>\n`;
+                        for (let cid in elements) { if (elements[cid].parentId === el.id) out += serializeNode(cid); }
+                        out += `      </page>\n`;
                     }
-                    for (let cid in elements) { if (elements[cid].parentId === el.id) out += serializeNode(cid); }
-                    out += `      </${tag}>\n`;
-                } else if (el.type === 'Place' || el.type === 'Port') {
+                } else if (el.type === 'Place') {
                     const tag = el.isRef ? 'referencePlace' : 'place';
-                    out += `      <${tag} id="${el.id}"${el.isRef ? ` ref="${el.targetId || ''}"` : ''}>\n`;
-                    out += `        <name><text>${el.name}</text></name>\n`;
-                    out += `        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n      </${tag}>\n`;
+                    out += `      <${tag} id="${el.id}"${el.isRef ? ` ref="${el.targetId || ''}"` : ''}>\n        <name><text>${el.name}</text></name>\n        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n      </${tag}>\n`;
                 } else if (el.type === 'Transition') {
                     const tag = el.isRef ? 'referenceTransition' : 'transition';
                     out += `      <${tag} id="${el.id}"${el.isRef ? ` ref="${el.targetId || ''}"` : ''}>\n`;
                     if (!el.isRef) {
                         out += `        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">\n`;
-                        if (el.subType === 'timed') {
-                            out += `          <type>timeTransitionType</type>\n`;
-                            out += `          <time start="${el.timeStart}" end="${el.timeEnd}"/>\n`;
-                        } else { out += `          <type>discreteTransitionType</type>\n`; }
+                        if (el.subType === 'timed') out += `          <type>timeTransitionType</type>\n          <time start="${el.timeStart}" end="${el.timeEnd}"/>\n`;
+                        else out += `          <type>discreteTransitionType</type>\n`;
                         out += `        </toolspecific>\n`;
                     }
-                    out += `        <name><text>${el.name}</text></name>\n`;
-                    out += `        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n      </${tag}>\n`;
+                    out += `        <name><text>${el.name}</text></name>\n        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n      </${tag}>\n`;
                 }
                 return out;
             }
 
-            for (let id in elements) { if (!elements[id].parentId) xml += serializeNode(id); }
+            for (let id in elements) { if (!elements[id].parentId && !['Topic', 'Service'].includes(elements[id].subType)) xml += serializeNode(id); }
+            
             arcs.forEach((arc, i) => {
-                xml += `      <arc id="a${i}" source="${arc.src}" target="${arc.dst}">\n`;
-                if (arc.type === 'inhibitor') xml += `        <toolspecific tool="ModernPetriEditor" version="1.0" type="inhibitor"/>\n`;
-                xml += `      </arc>\n`;
+                if (elements[arc.src] && elements[arc.dst] && elements[arc.src].type !== 'Port' && elements[arc.dst].type !== 'Port') {
+                    xml += `      <arc id="a${i}" source="${arc.src}" target="${arc.dst}">\n`;
+                    if (arc.type === 'inhibitor') xml += `        <toolspecific tool="ModernPetriEditor" version="1.0" type="inhibitor"/>\n`;
+                    xml += `      </arc>\n`;
+                }
             });
+
+            const topics = Object.values(elements).filter(e => e.subType === 'Topic');
+            topics.forEach(t => {
+                xml += `      <transition id="${t.id}">\n        <graphics><position x="${t.x}" y="${t.y}"/><dimension x="${t.w}" y="${t.h}"/></graphics>\n`;
+                xml += `        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.1">\n          <type>topicTransitionType</type>\n          <topicName>${t.name}</topicName>\n          <publishers>\n`;
+                const pubs = Object.values(elements).filter(e => e.parentId === t.id && e.name === 'publisher');
+                pubs.forEach(p => { if (p.targetId) xml += `            <publisher>\n              <id>${p.targetId}</id>\n              <limit>0</limit>\n            </publisher>\n`; });
+                xml += `          </publishers>\n          <subscribers>\n`;
+                const subs = Object.values(elements).filter(e => e.parentId === t.id && e.name === 'subscriber');
+                subs.forEach(s => { if (s.targetId) xml += `            <subscriber>\n              <id>${s.targetId}</id>\n              <limit>0</limit>\n            </subscriber>\n`; });
+                xml += `          </subscribers>\n        </toolspecific>\n        <name><text>${t.name}</text></name>\n      </transition>\n`;
+            });
+
+            const services = Object.values(elements).filter(e => e.subType === 'Service');
+            services.forEach(s => {
+                xml += `      <transition id="${s.id}">\n        <graphics><position x="${s.x}" y="${s.y}"/><dimension x="${s.w}" y="${s.h}"/></graphics>\n`;
+                xml += `        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.1">\n          <type>serviceTransitionType</type>\n          <serviceName>${s.name}</serviceName>\n`;
+                const sReqPort = Object.values(elements).find(e => e.parentId === s.id && e.name === 'server_req');
+                const sResPort = Object.values(elements).find(e => e.parentId === s.id && e.name === 'server_res');
+                
+                xml += `          <serverInput>${sReqPort?.targetId || ''}</serverInput>\n          <serverOutput>${sResPort?.targetId || ''}</serverOutput>\n          <serverCapacity>1</serverCapacity>\n          <channels>\n`;
+                
+                const channels = Object.values(elements).filter(e => e.parentId === s.id && e.subType === 'Channel');
+                channels.forEach(ch => {
+                    const cReq = Object.values(elements).find(e => e.parentId === ch.id && e.name === 'request');
+                    const cRes = Object.values(elements).find(e => e.parentId === ch.id && e.name === 'response');
+                    
+                    xml += `            <channel>\n              <cid>${ch.id}</cid>\n              <request>${cReq?.targetId || ''}</request>\n              <response>${cRes?.targetId || ''}</response>\n            </channel>\n`;
+                });
+                xml += `          </channels>\n        </toolspecific>\n        <name><text>${s.name}</text></name>\n      </transition>\n`;
+            });
+
             xml += '    </page>\n  </net>\n</pnml>';
             return xml;
         }
