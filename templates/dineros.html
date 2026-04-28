@@ -81,6 +81,7 @@
                 <button class="tool-btn" data-tool="Timed Trans"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><circle cx="12" cy="12" r="4"></circle><polyline points="12 10 12 12 14 12"></polyline></svg> Timed Tx</button>
                 <button class="tool-btn" data-tool="Ref Place"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"></circle></svg> Ref Place</button>
                 <button class="tool-btn" data-tool="Ref Transition"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="2" stroke-dasharray="3 3"></rect></svg> Ref Tx</button>
+                <button class="tool-btn" data-tool="Page"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg> Page</button>
                 <div class="divider"></div>
                 <button class="tool-btn" data-tool="Arc"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg> Arc</button>
                 <button class="tool-btn" data-tool="Inhibitor"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="15" y2="12"></line><circle cx="17" cy="12" r="2"></circle></svg> Inhibitor</button>
@@ -94,12 +95,19 @@
                 <div class="divider"></div>
                 <button class="tool-btn" data-tool="NodePage"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M6 12h12"></path></svg> Node</button>
                 <button class="tool-btn" data-tool="CBGroupPage"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" stroke-dasharray="4 4"></rect></svg> CB Group</button>
+                <div class="divider"></div>
                 <button class="tool-btn" data-tool="TimerPage"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 15"></polyline></svg> Timer</button>
-                <button class="tool-btn" data-tool="SubPage"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"></path><polyline points="4 8 12 14 20 8"></polyline></svg> Subscriber</button>
+                <button class="tool-btn" data-tool="SubPage"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"></path><polyline points="4 8 12 14 20 8"></polyline></svg> Sub</button>
                 <button class="tool-btn" data-tool="ServerPage"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg> Server</button>
                 <div class="divider"></div>
                 <button class="tool-btn" data-tool="TopicPage"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg> Topic</button>
                 <button class="tool-btn" data-tool="ServicePage"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Service</button>
+                <div class="divider"></div>
+                
+                <button class="tool-btn" data-tool="Start Place"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><polygon points="10,8 15,12 10,16" fill="currentColor"></polygon></svg> Start P</button>
+                <button class="tool-btn" data-tool="End Place"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><rect x="9" y="9" width="6" height="6" fill="currentColor"></rect></svg> End P</button>
+                <button class="tool-btn" data-tool="Start Tx"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="2"></rect><polygon points="9,9 15,12 9,15" fill="currentColor"></polygon></svg> Start Tx</button>
+                <button class="tool-btn" data-tool="End Tx"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" fill="currentColor"></rect></svg> End Tx</button>
             </nav>
         </div>
 
@@ -177,6 +185,13 @@
         function getDepth(el) { let d = 0, c = el; while (c && c.parentId && elements[c.parentId]) { d++; c = elements[c.parentId]; } return d; }
         function hasAncestor(nodeId, targetSubType) { let curr = elements[nodeId]; while (curr) { if (curr.subType === targetSubType) return true; curr = curr.parentId ? elements[curr.parentId] : null; } return false; }
         
+        // Helper to find ancestor node specifically for XSD export compliance
+        function getAncestorNodeName(nodeId) {
+            let curr = elements[nodeId];
+            while (curr) { if (curr.subType === 'Node') return curr.name; curr = curr.parentId ? elements[curr.parentId] : null; }
+            return '';
+        }
+
         function getDeepestPageAt(wx, wy) {
             let found = null, maxD = -1;
             for (let id in elements) {
@@ -187,7 +202,6 @@
             } return found;
         }
 
-        // Prioritize Ports/Nodes over background pages
         function getNodeAt(wx, wy) {
             for (let id in elements) {
                 const n = elements[id];
@@ -195,15 +209,11 @@
             } return getDeepestPageAt(wx, wy);
         }
 
-        // Deep Recursive Delete
         function deleteElementTree(id) {
             if (!elements[id]) return;
             if (elements[id].type === 'Page') { for (let cid in elements) { if (elements[cid].parentId === id) deleteElementTree(cid); } }
-            // Sever Reference lines safely
             for (let rid in elements) {
-                if (elements[rid].isRef && elements[rid].targetId === id) {
-                    elements[rid].isRef = false; elements[rid].targetId = null;
-                }
+                if (elements[rid].isRef && elements[rid].targetId === id) { elements[rid].isRef = false; elements[rid].targetId = null; if (elements[rid].type === 'Port') delete elements[rid]; }
             }
             arcs = arcs.filter(a => a.src !== id && a.dst !== id);
             delete elements[id];
@@ -232,16 +242,34 @@
                 } else { isPanning = true; panStartX = e.clientX - offsetX; panStartY = e.clientY - offsetY; }
                 redraw();
             } 
-            else if (['Place', 'Transition', 'Timed Trans', 'Ref Place', 'Ref Transition'].includes(currentTool)) {
-                const isTimed = currentTool === 'Timed Trans';
+            else if (['Place', 'Transition', 'Timed Trans', 'Ref Place', 'Ref Transition', 'Start Place', 'End Place', 'Start Tx', 'End Tx'].includes(currentTool)) {
+                const isTimed = currentTool === 'Timed Trans' || currentTool.includes('Tx');
                 const isRef = currentTool.startsWith('Ref');
-                const baseType = currentTool.includes('Trans') ? 'Transition' : 'Place';
+                const baseType = currentTool.includes('Trans') || currentTool.includes('Tx') ? 'Transition' : 'Place';
                 const parent = getDeepestPageAt(worldX, worldY);
                 
                 if (parent && ['Topic', 'Service', 'Channel'].includes(parent.subType)) { showToast(`Cannot place nodes directly inside a Channel!`, true); setTool('Select'); return; }
                 
-                const id = (isRef ? 'R' : '') + (isTimed ? 'T' : baseType[0]) + counter++;
-                elements[id] = { id, name: id, type: baseType, subType: isTimed ? 'timed' : 'discrete', x: worldX, y: worldY, isRef, tokens: 0, timeStart: isTimed?1:0, timeEnd: isTimed?1:0, parentId: parent ? parent.id : null };
+                const isSpecialNode = ['Start Place', 'End Place', 'Start Tx', 'End Tx'].includes(currentTool);
+                if (isSpecialNode) {
+                    if (!parent || !['Timer', 'Sub', 'Server'].includes(parent.subType)) {
+                        showToast(`Start/End elements must be placed inside a Timer, Sub, or Server Page!`, true);
+                        setTool('Select'); return;
+                    }
+                }
+
+                let subType = isTimed ? 'timed' : 'discrete';
+                if (currentTool === 'Start Place') subType = 'placeStart';
+                if (currentTool === 'End Place') subType = 'placeEnd';
+                if (currentTool === 'Start Tx') subType = 'transitionStart';
+                if (currentTool === 'End Tx') subType = 'transitionEnd';
+
+                const id = (isRef ? 'R' : '') + (baseType === 'Transition' ? 'T' : 'P') + counter++;
+                let defaultName = id;
+                if (currentTool === 'Start Place' || currentTool === 'Start Tx') defaultName += '_Start';
+                if (currentTool === 'End Place' || currentTool === 'End Tx') defaultName += '_End';
+
+                elements[id] = { id, name: defaultName, type: baseType, subType: subType, x: worldX, y: worldY, isRef, tokens: 0, timeStart: isTimed?1:0, timeEnd: isTimed?1:0, parentId: parent ? parent.id : null };
                 markDirty(); setTool('Select');
             }
             else if (currentTool.endsWith('Page') || currentTool === 'Page') {
@@ -269,7 +297,6 @@
                           ['Sub', 'Server'].includes(subType) ? { prio: 2 } : null
                 };
 
-                // Auto-generate Server-side ports when creating a Service
                 if (subType === 'Service') {
                     const reqP = 'Port' + counter++; elements[reqP] = { id: reqP, name: 'server_req', type: 'Port', x: nx + nw - 20, y: ny + 40, parentId: id };
                     const resP = 'Port' + counter++; elements[resP] = { id: resP, name: 'server_res', type: 'Port', x: nx + nw - 20, y: ny + nh - 40, parentId: id };
@@ -284,12 +311,10 @@
                     else if (selectedForArc.id !== n.id) {
                         let src = selectedForArc, dst = n, valid = true;
 
-                        // Constraint: Root Places cannot connect to channels
                         if (src.type === 'Place' && !src.parentId && ['Topic', 'Service', 'Port'].includes(dst.subType || dst.type)) { showToast("Root places cannot connect to channels!", true); valid = false; }
                         if (dst.type === 'Place' && !dst.parentId && ['Topic', 'Service', 'Port'].includes(src.subType || src.type)) { showToast("Root places cannot connect to channels!", true); valid = false; }
 
                         if (valid) {
-                            // Smart Port Creation Routing
                             if (src.type === 'Place' && dst.type === 'Page' && dst.subType === 'Topic') {
                                 let pCount = Object.values(elements).filter(e => e.parentId === dst.id).length;
                                 let pId = 'Port' + counter++;
@@ -303,7 +328,6 @@
                                 valid = false;
                             }
                             else if (src.type === 'Place' && dst.type === 'Page' && dst.subType === 'Service') {
-                                // Service Client routing (Auto builds Channel container)
                                 let chCount = Object.values(elements).filter(e => e.parentId === dst.id && e.subType === 'Channel').length;
                                 let chId = 'Channel' + counter++;
                                 elements[chId] = { id: chId, name: 'Client ' + (chCount+1), type: 'Page', subType: 'Channel', x: dst.x + 10, y: dst.y + 40 + (chCount*70), w: dst.w - 50, h: 60, parentId: dst.id };
@@ -379,7 +403,7 @@
                 const n = elements[id];
                 if (n.type !== 'Page') {
                     if (Math.abs(n.x - wx) < 22 && Math.abs(n.y - wy) < 22) return { node: n, type: 'name' };
-                    if (n.subType === 'timed' && Math.abs(n.x - wx) < 50 && wy >= n.y + 20 && wy <= n.y + 45) return { node: n, type: 'timing' };
+                    if (['timed', 'transitionStart', 'transitionEnd'].includes(n.subType) && Math.abs(n.x - wx) < 50 && wy >= n.y + 20 && wy <= n.y + 45) return { node: n, type: 'timing' };
                 } else {
                     if (wx >= n.x && wx <= n.x + n.w && wy >= n.y && wy <= n.y + 36) return { node: n, type: 'name' };
                 }
@@ -419,8 +443,8 @@
             }
         });
 
-        // Edge trigonometry
         function getCenter(node) { return node.type === 'Page' ? { x: node.x + node.w/2, y: node.y + node.h/2 } : { x: node.x, y: node.y }; }
+        
         function getPerimeterPoint(node, tx, ty) {
             const c = getCenter(node); const a = Math.atan2(ty - c.y, tx - c.x);
             if (node.type === 'Place' || node.type === 'Port') return { x: c.x + 20 * Math.cos(a), y: c.y + 20 * Math.sin(a) };
@@ -470,16 +494,31 @@
                 ctx.fillStyle = cols.nodeBg; ctx.strokeStyle = isSel ? cols.selected : (isTgt ? cols.target : cols.nodeBorder);
                 if (n.isRef) ctx.setLineDash([6, 6]);
 
-                if (n.type === 'Place') { ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, Math.PI*2); ctx.fill(); ctx.stroke(); } 
+                if (n.type === 'Place') { 
+                    ctx.beginPath(); ctx.arc(n.x, n.y, 20, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
+                    if (n.subType === 'placeStart') {
+                        ctx.fillStyle = cols.textMain; ctx.beginPath(); ctx.moveTo(n.x-4, n.y-6); ctx.lineTo(n.x+6, n.y); ctx.lineTo(n.x-4, n.y+6); ctx.fill();
+                    } else if (n.subType === 'placeEnd') {
+                        ctx.fillStyle = cols.textMain; ctx.fillRect(n.x-4, n.y-4, 8, 8);
+                    }
+                } 
                 else if (n.type === 'Transition') { 
                     ctx.beginPath(); ctx.rect(n.x - 12, n.y - 20, 24, 40); ctx.fill(); ctx.stroke(); 
-                    if (n.subType === 'timed') { ctx.beginPath(); ctx.arc(n.x, n.y, 6, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.x, n.y - 3); ctx.moveTo(n.x, n.y); ctx.lineTo(n.x + 2, n.y + 2); ctx.stroke(); }
+                    if (['timed', 'transitionStart', 'transitionEnd'].includes(n.subType)) { 
+                        ctx.beginPath(); ctx.arc(n.x, n.y, 6, 0, Math.PI * 2); ctx.stroke(); 
+                        ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(n.x, n.y - 3); ctx.moveTo(n.x, n.y); ctx.lineTo(n.x + 2, n.y + 2); ctx.stroke(); 
+                    }
+                    if (n.subType === 'transitionStart') {
+                        ctx.fillStyle = cols.textMain; ctx.beginPath(); ctx.moveTo(n.x-4, n.y-14); ctx.lineTo(n.x+6, n.y-8); ctx.lineTo(n.x-4, n.y-2); ctx.fill();
+                    } else if (n.subType === 'transitionEnd') {
+                        ctx.fillStyle = cols.textMain; ctx.fillRect(n.x-4, n.y-14, 8, 8);
+                    }
                 } else if (n.type === 'Port') {
                     ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(n.x, n.y, 16, 0, Math.PI*2); ctx.fillStyle = cols.bg; ctx.fill(); ctx.stroke();
                 }
                 ctx.setLineDash([]); ctx.fillStyle = isSel ? cols.selected : cols.textMain; ctx.font = '12px system-ui'; ctx.textAlign = 'center'; 
                 ctx.fillText(n.name, n.x, n.y - 28);
-                if (n.subType === 'timed') { ctx.font = '600 12px monospace'; ctx.fillText(`[${n.timeStart}, ${n.timeEnd}]`, n.x, n.y + 35); }
+                if (['timed', 'transitionStart', 'transitionEnd'].includes(n.subType)) { ctx.font = '600 12px monospace'; ctx.fillText(`[${n.timeStart}, ${n.timeEnd}]`, n.x, n.y + 35); }
             }
             ctx.restore();
         }
@@ -491,14 +530,12 @@
             const pages = Object.values(elements).filter(e => e.type === 'Page').sort((a, b) => getDepth(a) - getDepth(b));
             pages.forEach(p => renderElement(p, cols));
             
-            // Draw Reference Lines based on Direction logic
             for (let id in elements) { 
                 const e = elements[id]; 
                 if (e.isRef && e.targetId && elements[e.targetId]) {
                     const tg = elements[e.targetId];
                     let source = e, dest = tg;
                     
-                    // Strict Flow Direction Rules for Ports
                     if (['publisher', 'request', 'server_res'].includes(e.name)) { source = tg; dest = e; }
                     else if (['subscriber', 'response', 'server_req'].includes(e.name)) { source = e; dest = tg; }
 
@@ -520,7 +557,6 @@
                 const s = elements[arc.src], d = elements[arc.dst];
                 if(s && d) {
                     let st = getCenter(s), en = getCenter(d);
-                    
                     if (d.type !== 'Page') {
                         st = getPerimeterPoint(s, getCenter(d).x, getCenter(d).y);
                         en = getPerimeterPoint(d, getCenter(s).x, getCenter(s).y);
@@ -549,12 +585,70 @@
             ctx.restore(); 
         }
 
-        document.getElementById('btn-autolayout').addEventListener('click', () => {
-            let startY = 100;
-            const rootPages = Object.values(elements).filter(e => e.type === 'Page' && !e.parentId);
-            rootPages.forEach((p, idx) => { p.x = 100; p.y = startY; startY += p.h + 50; });
-            scale = 1; offsetX = 0; offsetY = 0; markDirty(); redraw(); showToast("Basic layout applied.");
-        });
+        function runAutoLayout(parentId = null, startX = 100, startY = 100) {
+            const childPages = Object.values(elements).filter(e => e.parentId === parentId && e.type === 'Page');
+            const childNodes = Object.values(elements).filter(e => e.parentId === parentId && e.type !== 'Page');
+            
+            if (parentId === null) {
+                let cx = 100, cy = 100, rowMaxH = 0;
+                childPages.forEach(p => {
+                    const size = runAutoLayout(p.id, cx, cy);
+                    p.x = cx; p.y = cy; p.w = size.w; p.h = size.h;
+                    cx += size.w + 40; rowMaxH = Math.max(rowMaxH, size.h);
+                    if (cx > 1200) { cx = 100; cy += rowMaxH + 40; rowMaxH = 0; }
+                });
+                return { w: 0, h: 0 };
+            }
+
+            let isChannel = elements[parentId] && elements[parentId].subType === 'Channel';
+            let isTopic = elements[parentId] && elements[parentId].subType === 'Topic';
+            let isService = elements[parentId] && elements[parentId].subType === 'Service';
+            
+            let cx = startX + 20, cy = startY + (isChannel ? 20 : 60);
+            let maxW = 260, rowMaxH = 0;
+
+            childPages.forEach(p => {
+                const size = runAutoLayout(p.id, cx, cy);
+                p.x = cx; p.y = cy; p.w = size.w; p.h = size.h;
+                cy += size.h + 20; maxW = Math.max(maxW, size.w + 40);
+            });
+
+            let standardNodes = childNodes.filter(n => n.type !== 'Port');
+            if (standardNodes.length > 0) {
+                let rowX = startX + 40;
+                standardNodes.forEach(n => {
+                    n.x = rowX; n.y = cy + 40; rowX += 80;
+                    if (rowX > startX + maxW - 40) { rowX = startX + 40; cy += 80; }
+                    rowMaxH = 80;
+                });
+                cy += rowMaxH + 20;
+            }
+
+            let ports = childNodes.filter(n => n.type === 'Port');
+            if (isTopic) {
+                let pubs = ports.filter(p => p.name === 'publisher'); let subs = ports.filter(p => p.name === 'subscriber');
+                pubs.forEach((p, i) => { p.x = startX + 20; p.y = startY + 50 + i*40; cy = Math.max(cy, p.y + 40); });
+                subs.forEach((p, i) => { p.x = startX + maxW - 20; p.y = startY + 50 + i*40; cy = Math.max(cy, p.y + 40); });
+            } 
+            else if (isService) {
+                let sReq = ports.find(p => p.name === 'server_req'); let sRes = ports.find(p => p.name === 'server_res');
+                if (sReq) { sReq.x = startX + maxW - 20; sReq.y = startY + 50; }
+                if (sRes) { sRes.x = startX + maxW - 20; sRes.y = Math.max(startY + 120, cy - 20); }
+                maxW += 20; 
+            }
+            else if (isChannel) {
+                let cReq = ports.find(p => p.name === 'request'); let cRes = ports.find(p => p.name === 'response');
+                if (cReq) { cReq.x = startX + 20; cReq.y = startY + 30; }
+                if (cRes) { cRes.x = startX + 180; cRes.y = startY + 30; }
+                maxW = 200; cy = startY + 60;
+            } else {
+                let px = startX + 40; ports.forEach(p => { p.x = px; p.y = cy + 20; px += 40; });
+            }
+
+            return { w: maxW, h: Math.max(120, cy - startY) };
+        }
+
+        document.getElementById('btn-autolayout').addEventListener('click', () => { runAutoLayout(); scale = 1; offsetX = 0; offsetY = 0; markDirty(); redraw(); showToast("Auto-layout applied."); });
 
         // -------------------------------------------------------------
         // XSD Accurate DiNeROS XML Parser & Generator
@@ -625,12 +719,24 @@
                                     else if (t === 'callbackServer') { subType = 'Server'; meta = { prio: parseInt(getChildTag(tsn, 'priority')?.textContent || '1') }; }
 
                                     let gName = getChildTag(tsn, 'group')?.textContent;
-                                    if (gName && cbGroups[gName]) { parentId = 'CBGroup_' + gName; }
+                                    if (gName && cbGroups[gName]) {
+                                        let gId = 'CBGroup_' + gName;
+                                        if (elements[gId] && !elements[gId].parentId && parentId) { elements[gId].parentId = parentId; }
+                                        parentId = gId; 
+                                    }
                                 }
                                 elements[id] = { id, name, type: 'Page', subType, x, y, w, h, parentId, meta };
                                 parseXMLNode(child, id);
                             } else if (tag === 'place' || tag === 'referenceplace') {
-                                let isRef = tag === 'referenceplace'; elements[id] = { id, name, type: 'Place', subType: 'discrete', x, y, parentId, isRef, targetId: child.getAttribute('ref') };
+                                let isRef = tag === 'referenceplace'; 
+                                let subType = 'discrete';
+                                let tsn = getChildTag(child, 'toolspecific');
+                                if (tsn) {
+                                    let tType = getChildTag(tsn, 'type')?.textContent;
+                                    if (tType === 'placeStartType') subType = 'placeStart';
+                                    else if (tType === 'placeEndType') subType = 'placeEnd';
+                                }
+                                elements[id] = { id, name, type: 'Place', subType, x, y, parentId, isRef, targetId: child.getAttribute('ref') };
                             } else if (tag === 'transition') {
                                 let tsn = getChildTag(child, 'toolspecific'); let tType = tsn ? getChildTag(tsn, 'type')?.textContent : null;
 
@@ -666,9 +772,18 @@
                                         });
                                     }
                                 } else {
-                                    let isTimed = tType === 'timeTransitionType'; let tStart = 0, tEnd = 0;
-                                    if (isTimed) { let timeNode = getChildTag(tsn, 'time'); if (timeNode) { tStart = parseInt(timeNode.getAttribute('start'))||0; tEnd = parseInt(timeNode.getAttribute('end'))||0; } }
-                                    elements[id] = { id, name, type: 'Transition', subType: isTimed?'timed':'discrete', x, y, parentId, isRef: false, timeStart: tStart, timeEnd: tEnd };
+                                    let isTimed = false;
+                                    let subType = 'discrete';
+                                    if (tType === 'timeTransitionType') { isTimed = true; subType = 'timed'; }
+                                    else if (tType === 'transitionStartType') { isTimed = true; subType = 'transitionStart'; }
+                                    else if (tType === 'transitionEndType') { isTimed = true; subType = 'transitionEnd'; }
+                                    
+                                    let tStart = 0, tEnd = 0;
+                                    if (isTimed) {
+                                        let timeNode = getChildTag(tsn, 'time'); 
+                                        if (timeNode) { tStart = parseInt(timeNode.getAttribute('start'))||0; tEnd = parseInt(timeNode.getAttribute('end'))||0; } 
+                                    }
+                                    elements[id] = { id, name, type: 'Transition', subType, x, y, parentId, isRef: false, timeStart: tStart, timeEnd: tEnd };
                                 }
                             } else if (tag === 'arc') {
                                 let src = child.getAttribute('source'), dst = child.getAttribute('target'), aType = 'normal';
@@ -681,9 +796,10 @@
                 }
 
                 let maxNum = 0; for (let id in elements) { let num = parseInt(id.replace(/\D/g, '')); if (!isNaN(num) && num > maxNum) maxNum = num; }
-                counter = maxNum + 1; scale = 1; offsetX = 0; offsetY = 0; setZoom(1); markClean(); redraw();
+                counter = maxNum + 1; scale = 1; offsetX = 0; offsetY = 0; setZoom(1); markClean(); 
                 
-                if (!hasPageGraphics) runAutoLayout(); redraw();
+                if (!hasPageGraphics) runAutoLayout(); 
+                else redraw();
             }; 
             reader.readAsText(file);
         }
@@ -699,7 +815,7 @@
                 cbgroups.forEach(cb => { 
                     xml += `        <group>\n          <id>${cb.name}</id>\n          <type>${cb.meta.cbType.toLowerCase()}</type>\n          <priority>${cb.meta.prio}</priority>\n`;
                     xml += `          <graphics><position x="${cb.x}" y="${cb.y}"/><dimension x="${cb.w}" y="${cb.h}"/></graphics>\n`;
-                    if (cb.parentId) xml += `          <node>${cb.parentId}</node>\n`;
+                    if (cb.parentId) xml += `          <node>${getAncestorNodeName(cb.id)}</node>\n`;
                     xml += `        </group>\n`; 
                 });
                 xml += `      </callbackgroups>\n    </toolspecific>\n`;
@@ -740,16 +856,31 @@
                         for (let cid in elements) { if (elements[cid].parentId === el.id) out += serializeNode(cid); }
                         out += `      </page>\n`;
                     }
-                } else if (el.type === 'Place') {
+                } else if (el.type === 'Place' || el.type === 'Port') {
                     const tag = el.isRef ? 'referencePlace' : 'place';
-                    out += `      <${tag} id="${el.id}"${el.isRef ? ` ref="${el.targetId || ''}"` : ''}>\n        <name><text>${el.name}</text></name>\n        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n      </${tag}>\n`;
+                    out += `      <${tag} id="${el.id}"${el.isRef ? ` ref="${el.targetId || ''}"` : ''}>\n`;
+                    if (['placeStart', 'placeEnd'].includes(el.subType)) {
+                        let pType = el.subType === 'placeStart' ? 'placeStartType' : 'placeEndType';
+                        let ancNode = getAncestorNodeName(el.id);
+                        out += `        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">\n          <type>${pType}</type>\n`;
+                        if (ancNode) out += `          <node>${ancNode}</node>\n`;
+                        out += `        </toolspecific>\n`;
+                    }
+                    out += `        <name><text>${el.name}</text></name>\n        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n      </${tag}>\n`;
                 } else if (el.type === 'Transition') {
                     const tag = el.isRef ? 'referenceTransition' : 'transition';
                     out += `      <${tag} id="${el.id}"${el.isRef ? ` ref="${el.targetId || ''}"` : ''}>\n`;
                     if (!el.isRef) {
                         out += `        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">\n`;
-                        if (el.subType === 'timed') out += `          <type>timeTransitionType</type>\n          <time start="${el.timeStart}" end="${el.timeEnd}"/>\n`;
-                        else out += `          <type>discreteTransitionType</type>\n`;
+                        if (['timed', 'transitionStart', 'transitionEnd'].includes(el.subType)) {
+                            let tType = 'timeTransitionType';
+                            if (el.subType === 'transitionStart') tType = 'transitionStartType';
+                            if (el.subType === 'transitionEnd') tType = 'transitionEndType';
+                            out += `          <type>${tType}</type>\n`;
+                            let ancNode = getAncestorNodeName(el.id);
+                            if (ancNode && el.subType !== 'timed') out += `          <node>${ancNode}</node>\n`;
+                            out += `          <time start="${el.timeStart}" end="${el.timeEnd}"/>\n`;
+                        } else out += `          <type>discreteTransitionType</type>\n`;
                         out += `        </toolspecific>\n`;
                     }
                     out += `        <name><text>${el.name}</text></name>\n        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n      </${tag}>\n`;
