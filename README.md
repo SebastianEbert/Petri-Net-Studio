@@ -44,7 +44,7 @@ your-repo-folder/
 ├── image.png              # Screenshot for this README
 └── templates/
     └── index.html         # The HTML5 Canvas frontend
-    └── index.html         # The HTML5 DiNeROS frontend
+    └── dineros.html         # The HTML5 DiNeROS frontend
 ```
 
 ### 3. Start the Server
@@ -114,7 +114,7 @@ The DiNeROS configuration features a built-in MQTT WebSocket client, allowing yo
 
 ```bash
 mosquitto_pub -h broker.emqx.io -p 1883 -t dineros/editor/marking -m '{"id": "P1", "tokens": 5}'
-
+```
 ---
 
 ## PNML Compatibility
