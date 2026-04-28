@@ -44,6 +44,7 @@ your-repo-folder/
 ├── image.png              # Screenshot for this README
 └── templates/
     └── index.html         # The HTML5 Canvas frontend
+    └── index.html         # The HTML5 DiNeROS frontend
 ```
 
 ### 3. Start the Server
@@ -52,6 +53,12 @@ Run the Flask application from your terminal:
 
 ```
 python app.py
+```
+
+Use the following command to use it with the DiNeROS modeling language within your terminal:
+
+```
+python app.py --dineros
 ```
 
 ### 4. Open the Editor
