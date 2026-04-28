@@ -49,6 +49,7 @@
         #toast.show { opacity: 1; top: 60px; }
         .inline-input { position: absolute; background: var(--bg-color); border: 2px dashed var(--primary); color: var(--text-main); font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 600; outline: none; padding: 2px 6px; border-radius: 6px; z-index: 1000; }
         .inline-input.timing { font-family: monospace; }
+        .inline-input.meta { color: #ef4444; border-color: #ef4444; font-family: serif; font-style: italic; }
     </style>
 </head>
 <body>
@@ -85,7 +86,7 @@
                 <div class="divider"></div>
                 <button class="tool-btn" data-tool="Arc"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg> Arc</button>
                 <button class="tool-btn" data-tool="Inhibitor"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="15" y2="12"></line><circle cx="17" cy="12" r="2"></circle></svg> Inhibitor</button>
-                <button class="tool-btn" data-tool="Token"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"></circle></svg> Token</button>
+                <button class="tool-btn" data-tool="Token" title="Shift-click to remove tokens"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"></circle></svg> Token</button>
                 <div class="divider"></div>
                 <button class="tool-btn" data-tool="Delete" style="color: var(--danger);"><svg viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Eraser</button>
             </nav>
@@ -156,7 +157,7 @@
         modelNameDisplay.addEventListener('click', () => { const nn = prompt("Name:", modelName); if(nn) { modelName = nn.replace(/\s+/g, '_'); markDirty(); } });
 
         function setTool(toolName) {
-            currentTool = toolName; selectedForArc = null; if (toolName !== 'Select') selectedElement = null;
+            currentTool = toolName; selectedForArc = null; if (toolName !== 'Select' && toolName !== 'Token') selectedElement = null;
             document.querySelectorAll('.tool-btn').forEach(b => { b.classList.remove('active'); if (b.getAttribute('data-tool') === toolName) b.classList.add('active'); });
             canvas.style.cursor = toolName === 'Select' ? 'default' : 'crosshair'; redraw();
         }
@@ -184,13 +185,7 @@
 
         function getDepth(el) { let d = 0, c = el; while (c && c.parentId && elements[c.parentId]) { d++; c = elements[c.parentId]; } return d; }
         function hasAncestor(nodeId, targetSubType) { let curr = elements[nodeId]; while (curr) { if (curr.subType === targetSubType) return true; curr = curr.parentId ? elements[curr.parentId] : null; } return false; }
-        
-        // Helper to find ancestor node specifically for XSD export compliance
-        function getAncestorNodeName(nodeId) {
-            let curr = elements[nodeId];
-            while (curr) { if (curr.subType === 'Node') return curr.name; curr = curr.parentId ? elements[curr.parentId] : null; }
-            return '';
-        }
+        function getAncestorNodeName(nodeId) { let curr = elements[nodeId]; while (curr) { if (curr.subType === 'Node') return curr.name; curr = curr.parentId ? elements[curr.parentId] : null; } return ''; }
 
         function getDeepestPageAt(wx, wy) {
             let found = null, maxD = -1;
@@ -231,6 +226,18 @@
                 return;
             }
 
+            if (currentTool === 'Token') {
+                const node = getNodeAt(worldX, worldY);
+                if (node && node.type === 'Place') {
+                    if (e.shiftKey) node.tokens = Math.max(0, (node.tokens || 0) - 1);
+                    else node.tokens = (node.tokens || 0) + 1;
+                    markDirty(); redraw();
+                } else {
+                    setTool('Select');
+                }
+                return;
+            }
+
             if (currentTool === 'Select') {
                 selectedElement = getNodeAt(worldX, worldY);
                 if (selectedElement) {
@@ -243,7 +250,7 @@
                 redraw();
             } 
             else if (['Place', 'Transition', 'Timed Trans', 'Ref Place', 'Ref Transition', 'Start Place', 'End Place', 'Start Tx', 'End Tx'].includes(currentTool)) {
-                const isTimed = currentTool === 'Timed Trans' || currentTool.includes('Tx');
+                const isTimed = currentTool === 'Timed Trans';
                 const isRef = currentTool.startsWith('Ref');
                 const baseType = currentTool.includes('Trans') || currentTool.includes('Tx') ? 'Transition' : 'Place';
                 const parent = getDeepestPageAt(worldX, worldY);
@@ -251,11 +258,8 @@
                 if (parent && ['Topic', 'Service', 'Channel'].includes(parent.subType)) { showToast(`Cannot place nodes directly inside a Channel!`, true); setTool('Select'); return; }
                 
                 const isSpecialNode = ['Start Place', 'End Place', 'Start Tx', 'End Tx'].includes(currentTool);
-                if (isSpecialNode) {
-                    if (!parent || !['Timer', 'Sub', 'Server'].includes(parent.subType)) {
-                        showToast(`Start/End elements must be placed inside a Timer, Sub, or Server Page!`, true);
-                        setTool('Select'); return;
-                    }
+                if (isSpecialNode && (!parent || !['Timer', 'Sub', 'Server'].includes(parent.subType))) {
+                    showToast(`Start/End elements must be placed inside a Timer, Sub, or Server Page!`, true); setTool('Select'); return;
                 }
 
                 let subType = isTimed ? 'timed' : 'discrete';
@@ -398,13 +402,34 @@
         canvas.addEventListener('mouseup', () => { draggingElement = null; resizingPage = null; isPanning = false; });
 
         function getEditableTarget(wx, wy) {
+            const dCtx = document.createElement('canvas').getContext('2d');
             const sortedIds = Object.keys(elements).sort((a, b) => getDepth(elements[b]) - getDepth(elements[a]));
+            
             for (let id of sortedIds) {
                 const n = elements[id];
                 if (n.type !== 'Page') {
                     if (Math.abs(n.x - wx) < 22 && Math.abs(n.y - wy) < 22) return { node: n, type: 'name' };
-                    if (['timed', 'transitionStart', 'transitionEnd'].includes(n.subType) && Math.abs(n.x - wx) < 50 && wy >= n.y + 20 && wy <= n.y + 45) return { node: n, type: 'timing' };
+                    if (n.subType === 'timed' && Math.abs(n.x - wx) < 50 && wy >= n.y + 20 && wy <= n.y + 45) return { node: n, type: 'timing' };
                 } else {
+                    if (n.meta && !['Topic', 'Service', 'Channel'].includes(n.subType)) {
+                        dCtx.font = 'italic 12px serif';
+                        let tagX = n.x + n.w - 10;
+                        const tags = [];
+                        if (n.meta.prio !== undefined) tags.push({key: 'prio', text: `Priority: ${n.meta.prio}`});
+                        if (n.meta.t !== undefined) tags.push({key: 't', text: `T: ${n.meta.t}`});
+                        if (n.meta.threads !== undefined) tags.push({key: 'threads', text: `Threads: ${n.meta.threads}`});
+                        if (n.meta.exec !== undefined) tags.push({key: 'exec', text: `Executor: ${n.meta.exec}`});
+                        if (n.meta.cbType !== undefined) tags.push({key: 'cbType', text: `Type: ${n.meta.cbType}`});
+                        
+                        for (let tag of tags) {
+                            const tw = dCtx.measureText(tag.text).width + 16;
+                            const rectX = tagX - tw; const rectY = n.y + 8;
+                            if (wx >= rectX && wx <= rectX + tw && wy >= rectY && wy <= rectY + 20) {
+                                return { node: n, type: 'meta', metaKey: tag.key, rect: {x: rectX, y: rectY, w: tw, h: 20} };
+                            }
+                            tagX -= (tw + 8);
+                        }
+                    }
                     if (wx >= n.x && wx <= n.x + n.w && wy >= n.y && wy <= n.y + 36) return { node: n, type: 'name' };
                 }
             } return null;
@@ -413,29 +438,43 @@
         canvas.addEventListener('dblclick', (e) => {
             const { worldX, worldY } = getMousePos(e); const target = getEditableTarget(worldX, worldY);
             if (target) { 
-                clearActiveInput(); const { node, type: editType } = target;
-                if (node.type === 'Page' && node.meta && editType === 'name') {
-                    const newName = prompt("Rename:", node.name); if (newName) { node.name = newName; markDirty(); }
-                    if (node.subType === 'Node') { const ex = prompt("Executor (Single/Multi):", node.meta.exec); if(ex) node.meta.exec = ex; const th = prompt("Threads:", node.meta.threads); if(th) node.meta.threads = parseInt(th); }
-                    else if (node.subType === 'Timer') { const t = prompt("Timer Period (T):", node.meta.t); if(t) node.meta.t = parseInt(t); }
-                    else if (['Sub', 'Server', 'CBGroup'].includes(node.subType)) { const p = prompt("Priority:", node.meta.prio); if(p) node.meta.prio = parseInt(p); }
-                    redraw(); return;
-                }
+                clearActiveInput(); const { node, type: editType, metaKey, rect } = target;
+                
                 let targetWorldY = node.y - 26, textAlign = 'center', inputScreenX = offsetX + node.x * scale;
-                if (node.type === 'Page') { targetWorldY = node.y + 18; inputScreenX = offsetX + (node.x + 16) * scale; textAlign = 'left'; } 
-                else if (editType === 'timing') { targetWorldY = node.y + 24; }
-                const input = document.createElement('input'); input.id = 'inline-editor'; input.className = editType === 'timing' ? 'inline-input timing' : 'inline-input'; input.type = 'text';
+                let inputVal = node.name;
+                
+                if (node.type === 'Page' && editType === 'name') { 
+                    targetWorldY = node.y + 18; inputScreenX = offsetX + (node.x + 16) * scale; textAlign = 'left'; 
+                } else if (editType === 'timing') { 
+                    targetWorldY = node.y + 24; inputVal = `${node.timeStart}, ${node.timeEnd}`;
+                } else if (editType === 'meta') {
+                    targetWorldY = rect.y + 10; inputScreenX = offsetX + (rect.x + rect.w / 2) * scale; textAlign = 'center'; inputVal = node.meta[metaKey];
+                }
+
+                const input = document.createElement('input'); input.id = 'inline-editor'; input.className = 'inline-input'; 
+                if (editType === 'timing') input.classList.add('timing');
+                if (editType === 'meta') input.classList.add('meta');
+                
                 const inputScreenY = offsetY + targetWorldY * scale;
-                input.style.left = `${inputScreenX}px`; input.style.top = `${inputScreenY}px`; input.style.textAlign = textAlign; input.style.transform = node.type === 'Page' ? 'translate(0, -50%)' : 'translate(-50%, -50%)';
-                input.style.fontSize = `${(editType === 'timing' ? 14 : 12) * scale}px`; input.style.width = `${Math.max(60, node.name.length * 8) * scale}px`;
-                input.value = editType === 'timing' ? `${node.timeStart}, ${node.timeEnd}` : node.name;
+                input.style.left = `${inputScreenX}px`; input.style.top = `${inputScreenY}px`; input.style.textAlign = textAlign; 
+                input.style.transform = (node.type === 'Page' && editType === 'name') ? 'translate(0, -50%)' : 'translate(-50%, -50%)';
+                input.style.fontSize = `${(editType === 'timing' || editType === 'meta' ? 12 : 14) * scale}px`; 
+                input.style.width = `${Math.max(60, String(inputVal).length * 8) * scale}px`;
+                input.value = inputVal;
+                
                 document.getElementById('canvas-container').appendChild(input); input.focus(); input.select();
+                
                 function saveAndClose() {
                     if (!document.getElementById('inline-editor')) return;
                     const val = input.value.trim();
                     if (val !== "") {
-                        if (editType === 'timing') { const parts = val.split(',').map(s => parseInt(s.trim())); node.timeStart = isNaN(parts[0]) ? 0 : parts[0]; node.timeEnd = isNaN(parts[1]) ? node.timeStart : parts[1]; }
-                        else { node.name = val; } markDirty(); redraw();
+                        if (editType === 'timing') { 
+                            const parts = val.split(',').map(s => parseInt(s.trim())); node.timeStart = isNaN(parts[0]) ? 0 : parts[0]; node.timeEnd = isNaN(parts[1]) ? node.timeStart : parts[1]; 
+                        } else if (editType === 'meta') {
+                            if (['prio', 't', 'threads'].includes(metaKey)) { node.meta[metaKey] = parseInt(val) || 1; } 
+                            else { node.meta[metaKey] = val; }
+                        } else { node.name = val; } 
+                        markDirty(); redraw();
                     }
                     input.remove();
                 }
@@ -484,9 +523,9 @@
                         ctx.beginPath(); ctx.roundRect(tagX - tw, n.y + 8, tw, 20, 4); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
                         ctx.fillStyle = '#7f1d1d'; ctx.fillText(text, tagX - 8, n.y + 22); tagX -= (tw + 8);
                     };
-                    if (n.meta.prio) drawTag(`Priority: ${n.meta.prio}`); if (n.meta.t) drawTag(`T: ${n.meta.t}`);
-                    if (n.meta.threads) drawTag(`Threads: ${n.meta.threads}`); if (n.meta.exec) drawTag(`Executor: ${n.meta.exec}`);
-                    if (n.meta.cbType) drawTag(`Type: ${n.meta.cbType}`);
+                    if (n.meta.prio !== undefined) drawTag(`Priority: ${n.meta.prio}`); if (n.meta.t !== undefined) drawTag(`T: ${n.meta.t}`);
+                    if (n.meta.threads !== undefined) drawTag(`Threads: ${n.meta.threads}`); if (n.meta.exec !== undefined) drawTag(`Executor: ${n.meta.exec}`);
+                    if (n.meta.cbType !== undefined) drawTag(`Type: ${n.meta.cbType}`);
                 }
                 if (isSel) { ctx.fillStyle = cols.selected; ctx.beginPath(); ctx.arc(n.x + n.w - 2, n.y + n.h - 2, 6 / scale, 0, Math.PI * 2); ctx.fill(); }
 
@@ -500,6 +539,10 @@
                         ctx.fillStyle = cols.textMain; ctx.beginPath(); ctx.moveTo(n.x-4, n.y-6); ctx.lineTo(n.x+6, n.y); ctx.lineTo(n.x-4, n.y+6); ctx.fill();
                     } else if (n.subType === 'placeEnd') {
                         ctx.fillStyle = cols.textMain; ctx.fillRect(n.x-4, n.y-4, 8, 8);
+                    } else if (n.tokens > 0) {
+                        ctx.fillStyle = cols.textMain; 
+                        if (n.tokens === 1) { ctx.beginPath(); ctx.arc(n.x, n.y, 4, 0, Math.PI*2); ctx.fill(); } 
+                        else { ctx.font = 'bold 14px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n.tokens, n.x, n.y + 1); ctx.textBaseline = 'alphabetic'; }
                     }
                 } 
                 else if (n.type === 'Transition') { 
@@ -518,7 +561,7 @@
                 }
                 ctx.setLineDash([]); ctx.fillStyle = isSel ? cols.selected : cols.textMain; ctx.font = '12px system-ui'; ctx.textAlign = 'center'; 
                 ctx.fillText(n.name, n.x, n.y - 28);
-                if (['timed', 'transitionStart', 'transitionEnd'].includes(n.subType)) { ctx.font = '600 12px monospace'; ctx.fillText(`[${n.timeStart}, ${n.timeEnd}]`, n.x, n.y + 35); }
+                if (n.subType === 'timed') { ctx.font = '600 12px monospace'; ctx.fillText(`[${n.timeStart}, ${n.timeEnd}]`, n.x, n.y + 35); }
             }
             ctx.restore();
         }
@@ -736,7 +779,15 @@
                                     if (tType === 'placeStartType') subType = 'placeStart';
                                     else if (tType === 'placeEndType') subType = 'placeEnd';
                                 }
-                                elements[id] = { id, name, type: 'Place', subType, x, y, parentId, isRef, targetId: child.getAttribute('ref') };
+                                
+                                let tokens = 0;
+                                let initMarking = getChildTag(child, 'initialMarking');
+                                if (initMarking) {
+                                    let tNode = getChildTag(initMarking, 'text');
+                                    if (tNode) tokens = parseInt(tNode.textContent) || 0;
+                                }
+                                
+                                elements[id] = { id, name, type: 'Place', subType, x, y, parentId, isRef, targetId: child.getAttribute('ref'), tokens };
                             } else if (tag === 'transition') {
                                 let tsn = getChildTag(child, 'toolspecific'); let tType = tsn ? getChildTag(tsn, 'type')?.textContent : null;
 
@@ -775,8 +826,8 @@
                                     let isTimed = false;
                                     let subType = 'discrete';
                                     if (tType === 'timeTransitionType') { isTimed = true; subType = 'timed'; }
-                                    else if (tType === 'transitionStartType') { isTimed = true; subType = 'transitionStart'; }
-                                    else if (tType === 'transitionEndType') { isTimed = true; subType = 'transitionEnd'; }
+                                    else if (tType === 'transitionStartType') { isTimed = false; subType = 'transitionStart'; }
+                                    else if (tType === 'transitionEndType') { isTimed = false; subType = 'transitionEnd'; }
                                     
                                     let tStart = 0, tEnd = 0;
                                     if (isTimed) {
@@ -866,7 +917,9 @@
                         if (ancNode) out += `          <node>${ancNode}</node>\n`;
                         out += `        </toolspecific>\n`;
                     }
-                    out += `        <name><text>${el.name}</text></name>\n        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n      </${tag}>\n`;
+                    out += `        <name><text>${el.name}</text></name>\n        <graphics><position x="${el.x}" y="${el.y}"/></graphics>\n`;
+                    if (el.tokens > 0) out += `        <initialMarking><text>${el.tokens}</text></initialMarking>\n`;
+                    out += `      </${tag}>\n`;
                 } else if (el.type === 'Transition') {
                     const tag = el.isRef ? 'referenceTransition' : 'transition';
                     out += `      <${tag} id="${el.id}"${el.isRef ? ` ref="${el.targetId || ''}"` : ''}>\n`;
@@ -879,7 +932,7 @@
                             out += `          <type>${tType}</type>\n`;
                             let ancNode = getAncestorNodeName(el.id);
                             if (ancNode && el.subType !== 'timed') out += `          <node>${ancNode}</node>\n`;
-                            out += `          <time start="${el.timeStart}" end="${el.timeEnd}"/>\n`;
+                            if (el.subType === 'timed') out += `          <time start="${el.timeStart}" end="${el.timeEnd}"/>\n`;
                         } else out += `          <type>discreteTransitionType</type>\n`;
                         out += `        </toolspecific>\n`;
                     }
