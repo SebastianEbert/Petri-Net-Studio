@@ -1,4 +1,4 @@
-# Petri Net Editor
+# Petri Net Studio
 
 ![Petri Net Editor Screenshot](image.png)
 
