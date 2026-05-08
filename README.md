@@ -44,8 +44,10 @@ your-repo-folder/
 ├── image.png              # Screenshot for this README
 └── templates/
     └── index.html         # The HTML5 Canvas frontend
-    └── dineros.html         # The HTML5 DiNeROS frontend
+    └── dineros.html       # The HTML5 DiNeROS frontend
 ```
+
+Remark: Further information about DiNeROS can be found here: https://dineros.pages.st.inf.tu-dresden.de
 
 ### 3. Start the Server
 
