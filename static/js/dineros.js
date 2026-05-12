@@ -5,6 +5,7 @@
         let currentTool = 'Select', elements = {}, arcs = [], counter = 1;
         let selectedElement = null, draggingElement = null, resizingPage = null, selectedForArc = null;
         let dragOffsetX = 0, dragOffsetY = 0;
+        let linkingReference = null, mouseWorldX = 0, mouseWorldY = 0;
         let modelName = "Untitled_Dineros_Net", isDirty = false;
 
         const mqttFeedUI = document.getElementById('mqtt-feed');
@@ -79,6 +80,7 @@
 
         function setTool(toolName) {
             currentTool = toolName; selectedForArc = null; if (toolName !== 'Select' && toolName !== 'Token') selectedElement = null;
+            if (linkingReference && toolName !== 'Ref Place' && toolName !== 'Ref Transition') { delete elements[linkingReference.id]; linkingReference = null; markDirty(); }
             document.querySelectorAll('.tool-btn').forEach(b => { b.classList.remove('active'); if (b.getAttribute('data-tool') === toolName) b.classList.add('active'); });
             canvas.style.cursor = toolName === 'Select' ? 'default' : 'crosshair'; redraw();
         }
@@ -87,7 +89,7 @@
             btn.addEventListener('click', (e) => {
                 let tool = e.target.getAttribute('data-tool'); if (!tool) tool = e.target.closest('.tool-btn').getAttribute('data-tool');
                 if (!tool) return;
-                if (tool === 'Clear') { elements = {}; arcs = []; counter = 1; selectedElement = null; setTool('Select'); markDirty(); return; }
+                if (tool === 'Clear') { elements = {}; arcs = []; counter = 1; selectedElement = null; linkingReference = null; setTool('Select'); markDirty(); return; }
                 setTool(tool);
             });
         });
@@ -141,6 +143,13 @@
 
             if (e.button === 1) { isPanning = true; panStartX = e.clientX - offsetX; panStartY = e.clientY - offsetY; return; }
 
+            if (linkingReference) {
+                const node = getNodeAt(worldX, worldY);
+                if (node && node.type === linkingReference.type && !node.isRef) { linkingReference.targetId = node.id; markDirty(); }
+                else { delete elements[linkingReference.id]; markDirty(); }
+                linkingReference = null; setTool('Select'); redraw(); return;
+            }
+
             if (currentTool === 'Delete') {
                 const node = getNodeAt(worldX, worldY);
                 if (node) { deleteElementTree(node.id); markDirty(); setTool('Select'); redraw(); }
@@ -192,8 +201,9 @@
                 if (currentTool === 'Start Place' || currentTool === 'Start Tx') defaultName += '_Start';
                 if (currentTool === 'End Place' || currentTool === 'End Tx') defaultName += '_End';
 
-                elements[id] = { id, name: defaultName, type: baseType, subType: subType, x: worldX, y: worldY, isRef, tokens: 0, timeStart: isTimed?1:0, timeEnd: isTimed?1:0, parentId: parent ? parent.id : null };
-                markDirty(); setTool('Select');
+                elements[id] = { id, name: defaultName, type: baseType, subType: subType, x: worldX, y: worldY, isRef, tokens: 0, timeStart: isTimed?1:0, timeEnd: isTimed?1:0, parentId: parent ? parent.id : null, targetId: null };
+                markDirty();
+                if (isRef) { linkingReference = elements[id]; redraw(); } else { setTool('Select'); }
             }
             else if (currentTool.endsWith('Page') || currentTool === 'Page') {
                 const typeMap = { 'Page': 'Standard', 'NodePage': 'Node', 'CBGroupPage': 'CBGroup', 'TimerPage': 'Timer', 'SubPage': 'Sub', 'ServerPage': 'Server', 'TopicPage': 'Topic', 'ServicePage': 'Service' };
@@ -293,7 +303,9 @@
 
         canvas.addEventListener('mousemove', (e) => {
             const { worldX, worldY } = getMousePos(e);
+            mouseWorldX = worldX; mouseWorldY = worldY;
             if (isPanning) { offsetX = e.clientX - panStartX; offsetY = e.clientY - panStartY; redraw(); return; }
+            if (linkingReference) { redraw(); return; }
 
             if (resizingPage) {
                 let newW = Math.max(150, worldX - resizingPage.x), newH = Math.max(100, worldY - resizingPage.y);
@@ -369,6 +381,7 @@
         }
 
         canvas.addEventListener('dblclick', (e) => {
+            if (linkingReference) return;
             const { worldX, worldY } = getMousePos(e); const target = getEditableTarget(worldX, worldY);
             if (target) {
                 clearActiveInput(); const { node, type: editType, metaKey, rect } = target;
@@ -589,6 +602,9 @@
 
             const nodes = Object.values(elements).filter(e => e.type !== 'Page').sort((a, b) => getDepth(a) - getDepth(b));
             nodes.forEach(n => renderElement(n, cols));
+
+            if (linkingReference) { ctx.save(); ctx.beginPath(); ctx.moveTo(linkingReference.x, linkingReference.y); ctx.lineTo(mouseWorldX, mouseWorldY); ctx.strokeStyle = cols.refLine; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.restore(); }
+
             ctx.restore();
         }
 
