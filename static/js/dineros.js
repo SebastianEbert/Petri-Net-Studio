@@ -137,6 +137,29 @@
             delete elements[id];
         }
 
+        // Derive a valid PNML id from a display name, kept unique across elements.
+        function sanitizeId(name) { return name.trim().replace(/\s+/g, '_'); }
+        function makeUniqueId(base, ignoreId) {
+            if (!base) return ignoreId;
+            let id = base, n = 2;
+            while (elements[id] && id !== ignoreId) { id = base + '_' + n++; }
+            return id;
+        }
+
+        // Rename an element AND sync its id to the new name, updating every reference
+        // (arcs, reference/port targets, child parents) so links don't break.
+        function renameElement(node, newName) {
+            node.name = newName;
+            const oldId = node.id, newId = makeUniqueId(sanitizeId(newName), oldId);
+            if (newId === oldId) return;
+            delete elements[oldId]; node.id = newId; elements[newId] = node;
+            for (let cid in elements) {
+                if (elements[cid].parentId === oldId) elements[cid].parentId = newId;
+                if (elements[cid].targetId === oldId) elements[cid].targetId = newId;
+            }
+            arcs.forEach(a => { if (a.src === oldId) a.src = newId; if (a.dst === oldId) a.dst = newId; });
+        }
+
         canvas.addEventListener('mousedown', (e) => {
             clearActiveInput();
             const { worldX, worldY } = getMousePos(e);
@@ -438,7 +461,7 @@
                             else { node.meta[metaKey] = val; }
                         } else if (editType === 'portLimit') {
                             node.limit = parseInt(val) || 0;
-                        } else { node.name = val; }
+                        } else { renameElement(node, val); }
                         markDirty(); redraw();
                     }
                     input.remove();
@@ -865,7 +888,7 @@
                     const tag = tMap[el.subType] || 'page';
 
                     if (tag === 'nodePage') {
-                        out += `      <nodePage id="${el.id}">\n        <name><text>${el.name}</text></name>\n`;
+                        out += `      <page id="${el.id}">\n        <name><text>${el.name}</text></name>\n`;
                         out += `        <graphics><position x="${el.x}" y="${el.y}"/><dimension x="${el.w}" y="${el.h}"/></graphics>\n`;
                         out += `        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">\n          <type>nodePage</type>\n          <executor>${el.meta.exec.toLowerCase()}</executor>\n          <threads>${el.meta.threads}</threads>\n        </toolspecific>\n`;
                         for (let cid in elements) {
@@ -874,7 +897,7 @@
                                 for (let sid in elements) { if (elements[sid].parentId === elements[cid].id) out += serializeNode(sid); }
                             }
                         }
-                        out += `      </nodePage>\n`;
+                        out += `      </page>\n`;
                     } else if (['callbackTimer', 'callbackSubscriber', 'callbackServer'].includes(tag)) {
                         out += `      <page id="${el.id}">\n        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">\n          <type>${tag}</type>\n`;
                         const cbParent = elements[el.parentId]; if (cbParent) out += `          <group>${cbParent.name}</group>\n`;

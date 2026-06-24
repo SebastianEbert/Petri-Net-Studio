@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pnml xmlns="http://www.pnml.org/version-2009/grammar/pnml">
+  <net id="AcomodiaFeatureSym" type="http://www.pnml.org/version-2009/grammar/ptnet">
+    <name><text>AcomodiaFeatureSym</text></name>
+    <page id="root">
+      <page id="FeatureNode">
+        <name><text>FeatureNode</text></name>
+        <graphics><position x="898" y="194"/><dimension x="600" y="686"/></graphics>
+        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">
+          <type>nodePage</type>
+          <executor>single</executor>
+          <threads>1</threads>
+        </toolspecific>
+      <page id="ModeSwap">
+        <name><text>ModeSwap</text></name>
+        <graphics><position x="956" y="265"/><dimension x="503" y="298"/></graphics>
+      <place id="P-LoopMode">
+        <name><text>P-LoopMode</text></name>
+        <graphics><position x="1016" y="433"/></graphics>
+        <initialMarking><text>1</text></initialMarking>
+      </place>
+      <transition id="T-IntervalMode">
+        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">
+          <type>timeTransitionType</type>
+          <node>FeatureNode</node>
+          <time start="1" end="1"/>
+        </toolspecific>
+        <name><text>T-IntervalMode</text></name>
+        <graphics><position x="1132" y="336"/></graphics>
+      </transition>
+      <place id="P1">
+        <name><text>P1</text></name>
+        <graphics><position x="1284" y="336"/></graphics>
+      </place>
+      <transition id="T-PollMode">
+        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">
+          <type>discreteTransitionType</type>
+        </toolspecific>
+        <name><text>T-PollMode</text></name>
+        <graphics><position x="1399" y="431"/></graphics>
+      </transition>
+      <place id="P2">
+        <name><text>P2</text></name>
+        <graphics><position x="1286" y="511"/></graphics>
+      </place>
+      <transition id="T-SubmitMode">
+        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">
+          <type>discreteTransitionType</type>
+        </toolspecific>
+        <name><text>T-SubmitMode</text></name>
+        <graphics><position x="1136" y="514"/></graphics>
+      </transition>
+      </page>
+      <page id="FrameChange">
+        <name><text>FrameChange</text></name>
+        <graphics><position x="959" y="578"/><dimension x="503" y="286"/></graphics>
+      <place id="P-LoopFrame">
+        <name><text>P-LoopFrame</text></name>
+        <graphics><position x="1014" y="757"/></graphics>
+      </place>
+      <transition id="T-IntervalFrame">
+        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">
+          <type>timeTransitionType</type>
+          <node>FeatureNode</node>
+          <time start="1" end="1"/>
+        </toolspecific>
+        <name><text>T-IntervalFrame</text></name>
+        <graphics><position x="1132" y="682"/></graphics>
+      </transition>
+      <place id="P3">
+        <name><text>P3</text></name>
+        <graphics><position x="1301" y="684"/></graphics>
+      </place>
+      <place id="P4">
+        <name><text>P4</text></name>
+        <graphics><position x="1299" y="829"/></graphics>
+      </place>
+      <transition id="T-PollFrame">
+        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">
+          <type>discreteTransitionType</type>
+        </toolspecific>
+        <name><text>T-PollFrame</text></name>
+        <graphics><position x="1403" y="751"/></graphics>
+      </transition>
+      <transition id="T-SubmitFrame">
+        <toolspecific tool="de.tudresden.inf.st.pnml.distributedPN" version="0.2">
+          <type>discreteTransitionType</type>
+        </toolspecific>
+        <name><text>T-SubmitFrame</text></name>
+        <graphics><position x="1128" y="834"/></graphics>
+      </transition>
+      </page>
+      </page>
+      <arc id="a0" source="P-LoopMode" target="T-IntervalMode">
+      </arc>
+      <arc id="a1" source="T-IntervalMode" target="P1">
+      </arc>
+      <arc id="a2" source="P1" target="T-PollMode">
+      </arc>
+      <arc id="a3" source="T-PollMode" target="P2">
+      </arc>
+      <arc id="a4" source="P2" target="T-SubmitMode">
+      </arc>
+      <arc id="a5" source="T-SubmitMode" target="P-LoopMode">
+      </arc>
+      <arc id="a6" source="P-LoopFrame" target="T-IntervalFrame">
+      </arc>
+      <arc id="a7" source="T-IntervalFrame" target="P3">
+      </arc>
+      <arc id="a8" source="P3" target="T-PollFrame">
+      </arc>
+      <arc id="a9" source="T-PollFrame" target="P4">
+      </arc>
+      <arc id="a10" source="P4" target="T-SubmitFrame">
+      </arc>
+      <arc id="a11" source="T-SubmitFrame" target="P-LoopFrame">
+      </arc>
+    </page>
+  </net>
+</pnml>

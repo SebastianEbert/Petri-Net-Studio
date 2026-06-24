@@ -302,6 +302,29 @@
             arcs = arcs.filter(a => a.src !== id && a.dst !== id); delete elements[id];
         }
 
+        // Derive a valid PNML id from a display name, kept unique across elements.
+        function sanitizeId(name) { return name.trim().replace(/\s+/g, '_'); }
+        function makeUniqueId(base, ignoreId) {
+            if (!base) return ignoreId;
+            let id = base, n = 2;
+            while (elements[id] && id !== ignoreId) { id = base + '_' + n++; }
+            return id;
+        }
+
+        // Rename an element AND sync its id to the new name, updating every reference
+        // (arcs, reference targets, child parents) so links don't break.
+        function renameElement(node, newName) {
+            node.name = newName;
+            const oldId = node.id, newId = makeUniqueId(sanitizeId(newName), oldId);
+            if (newId === oldId) return;
+            delete elements[oldId]; node.id = newId; elements[newId] = node;
+            for (let cid in elements) {
+                if (elements[cid].parentId === oldId) elements[cid].parentId = newId;
+                if (elements[cid].targetId === oldId) elements[cid].targetId = newId;
+            }
+            arcs.forEach(a => { if (a.src === oldId) a.src = newId; if (a.dst === oldId) a.dst = newId; });
+        }
+
         function getDeepestPageAt(wx, wy) {
             let found = null, maxD = -1;
             for (let id in elements) {
@@ -397,7 +420,7 @@
                             node.timeStart = isNaN(parts[0]) ? 0 : parts[0];
                             node.timeEnd = isNaN(parts[1]) ? node.timeStart : parts[1];
                         } else {
-                            node.name = val;
+                            renameElement(node, val);
                         }
                         markDirty(); redraw();
                     }
